@@ -31,4 +31,4 @@ Thumbs.db
 # Coverage
 coverage.out
 
-envguard
+/envguard
