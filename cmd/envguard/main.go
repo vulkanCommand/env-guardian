@@ -41,20 +41,27 @@ func runValidate() int {
 	sort.Strings(result.DuplicateKeys)
 
 	fmt.Println("Env Validation Report")
-	fmt.Println("")
+	fmt.Println("---------------------")
 
-	if len(result.MissingKeys) == 0 && len(result.DuplicateKeys) == 0 {
-		fmt.Println("[PASS] No missing or duplicate environment variables found")
-		return 0
-	}
+	errorCount := 0
 
 	for _, key := range result.MissingKeys {
 		fmt.Printf("[ERROR] Missing key: %s\n", key)
+		errorCount++
 	}
 
 	for _, key := range result.DuplicateKeys {
 		fmt.Printf("[ERROR] Duplicate key: %s\n", key)
+		errorCount++
 	}
+
+	if errorCount == 0 {
+		fmt.Println("[PASS] Environment configuration looks good")
+		return 0
+	}
+
+	fmt.Println("")
+	fmt.Printf("Summary: %d error(s) found\n", errorCount)
 
 	return 1
 }
