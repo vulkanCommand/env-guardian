@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
+	"github.com/vulkanCommand/env-guardian/internal/parser"
+	"github.com/vulkanCommand/env-guardian/internal/validator"
 	"github.com/vulkanCommand/env-guardian/internal/version"
 )
 
@@ -19,6 +22,43 @@ func printHelp() {
 	fmt.Println("  envguard doctor")
 }
 
+func runValidate() int {
+	envFile, err := parser.ParseEnvFile(".env")
+	if err != nil {
+		fmt.Println("Error: could not read .env")
+		return 1
+	}
+
+	exampleFile, err := parser.ParseEnvFile(".env.example")
+	if err != nil {
+		fmt.Println("Error: could not read .env.example")
+		return 1
+	}
+
+	result := validator.ValidateEnv(envFile, exampleFile)
+
+	sort.Strings(result.MissingKeys)
+	sort.Strings(result.DuplicateKeys)
+
+	fmt.Println("Env Validation Report")
+	fmt.Println("")
+
+	if len(result.MissingKeys) == 0 && len(result.DuplicateKeys) == 0 {
+		fmt.Println("[PASS] No missing or duplicate environment variables found")
+		return 0
+	}
+
+	for _, key := range result.MissingKeys {
+		fmt.Printf("[ERROR] Missing key: %s\n", key)
+	}
+
+	for _, key := range result.DuplicateKeys {
+		fmt.Printf("[ERROR] Duplicate key: %s\n", key)
+	}
+
+	return 1
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -31,7 +71,7 @@ func main() {
 	case "version":
 		fmt.Println(version.Version)
 	case "validate":
-		fmt.Println("validate command not implemented yet")
+		os.Exit(runValidate())
 	case "lint":
 		fmt.Println("lint command not implemented yet")
 	case "analyze":
