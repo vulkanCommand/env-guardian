@@ -5,8 +5,8 @@ import (
 	"os"
 	"sort"
 
-	"github.com/vulkanCommand/env-guardian/internal/doctor"
 	"github.com/vulkanCommand/env-guardian/internal/analyzer"
+	"github.com/vulkanCommand/env-guardian/internal/doctor"
 	"github.com/vulkanCommand/env-guardian/internal/linter"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
 	"github.com/vulkanCommand/env-guardian/internal/validator"
@@ -138,6 +138,13 @@ func runDoctor() int {
 		fmt.Println("[OK] .env.example file exists")
 	} else {
 		fmt.Println("[WARNING] .env.example file missing")
+	}
+
+	if len(result.MissingInEnv) > 0 {
+		fmt.Println("\n[WARNING] Missing keys in .env (present in .env.example):")
+		for _, key := range result.MissingInEnv {
+			fmt.Printf("- %s\n", key)
+		}
 	}
 
 	return 0

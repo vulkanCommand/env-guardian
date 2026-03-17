@@ -1,10 +1,16 @@
 package doctor
 
-import "os"
+import (
+	"os"
+
+	"github.com/vulkanCommand/env-guardian/internal/parser"
+	"github.com/vulkanCommand/env-guardian/internal/validator"
+)
 
 type DoctorResult struct {
 	EnvFileExists     bool
 	ExampleFileExists bool
+	MissingInEnv      []string
 }
 
 func Run() DoctorResult {
@@ -16,6 +22,16 @@ func Run() DoctorResult {
 
 	if _, err := os.Stat(".env.example"); err == nil {
 		result.ExampleFileExists = true
+	}
+
+	if result.EnvFileExists && result.ExampleFileExists {
+		envFile, err1 := parser.ParseEnvFile(".env")
+		exampleFile, err2 := parser.ParseEnvFile(".env.example")
+
+		if err1 == nil && err2 == nil {
+			validationResult := validator.ValidateEnv(envFile, exampleFile)
+			result.MissingInEnv = validationResult.MissingKeys
+		}
 	}
 
 	return result
