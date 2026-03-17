@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/vulkanCommand/env-guardian/internal/linter"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
 	"github.com/vulkanCommand/env-guardian/internal/validator"
 	"github.com/vulkanCommand/env-guardian/internal/version"
@@ -66,6 +67,31 @@ func runValidate() int {
 	return 1
 }
 
+func runLint() int {
+	result, err := linter.Run(".env")
+	if err != nil {
+		fmt.Println("Error: could not read .env")
+		return 1
+	}
+
+	fmt.Println("Env Lint Report")
+	fmt.Println("---------------")
+
+	if len(result.InvalidLines) == 0 {
+		fmt.Println("[PASS] .env syntax looks good")
+		return 0
+	}
+
+	for _, issue := range result.InvalidLines {
+		fmt.Printf("[ERROR] %s\n", issue)
+	}
+
+	fmt.Println("")
+	fmt.Printf("Summary: %d lint issue(s) found\n", len(result.InvalidLines))
+
+	return 1
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -80,7 +106,7 @@ func main() {
 	case "validate":
 		os.Exit(runValidate())
 	case "lint":
-		fmt.Println("lint command not implemented yet")
+		os.Exit(runLint())
 	case "analyze":
 		fmt.Println("analyze command not implemented yet")
 	case "doctor":
