@@ -104,6 +104,20 @@ func runAnalyze() int {
 	fmt.Println("-------------------")
 	fmt.Printf("Total keys: %d\n", result.TotalKeys)
 
+	if len(result.EmptyValues) > 0 {
+		fmt.Println("\nEmpty values:")
+		for _, key := range result.EmptyValues {
+			fmt.Printf("- %s\n", key)
+		}
+	}
+
+	if len(result.PotentialSecrets) > 0 {
+		fmt.Println("\nPotential sensitive keys:")
+		for _, key := range result.PotentialSecrets {
+			fmt.Printf("- %s\n", key)
+		}
+	}
+
 	return 0
 }
 

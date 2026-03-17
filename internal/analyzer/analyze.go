@@ -6,8 +6,8 @@ import (
 )
 
 type AnalyzeResult struct {
-	TotalKeys     int
-	EmptyValues   []string
+	TotalKeys        int
+	EmptyValues      []string
 	PotentialSecrets []string
 }
 
@@ -42,9 +42,12 @@ func Run(path string) (AnalyzeResult, error) {
 			result.EmptyValues = append(result.EmptyValues, key)
 		}
 
-		if strings.Contains(strings.ToLower(key), "secret") ||
-			strings.Contains(strings.ToLower(key), "password") ||
-			strings.Contains(strings.ToLower(key), "token") {
+		lowerKey := strings.ToLower(key)
+
+		if strings.Contains(lowerKey, "secret") ||
+			strings.Contains(lowerKey, "password") ||
+			strings.Contains(lowerKey, "token") ||
+			strings.Contains(lowerKey, "key") {
 			result.PotentialSecrets = append(result.PotentialSecrets, key)
 		}
 	}
