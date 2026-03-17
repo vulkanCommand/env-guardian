@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/vulkanCommand/env-guardian/internal/analyzer"
 	"github.com/vulkanCommand/env-guardian/internal/linter"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
 	"github.com/vulkanCommand/env-guardian/internal/validator"
@@ -92,6 +93,20 @@ func runLint() int {
 	return 1
 }
 
+func runAnalyze() int {
+	result, err := analyzer.Run(".env")
+	if err != nil {
+		fmt.Println("Error: could not read .env")
+		return 1
+	}
+
+	fmt.Println("Env Analysis Report")
+	fmt.Println("-------------------")
+	fmt.Printf("Total keys: %d\n", result.TotalKeys)
+
+	return 0
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -108,7 +123,7 @@ func main() {
 	case "lint":
 		os.Exit(runLint())
 	case "analyze":
-		fmt.Println("analyze command not implemented yet")
+		os.Exit(runAnalyze())
 	case "doctor":
 		fmt.Println("doctor command not implemented yet")
 	case "help", "--help", "-h":
