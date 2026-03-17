@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/vulkanCommand/env-guardian/internal/doctor"
 	"github.com/vulkanCommand/env-guardian/internal/analyzer"
 	"github.com/vulkanCommand/env-guardian/internal/linter"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
@@ -121,6 +122,27 @@ func runAnalyze() int {
 	return 0
 }
 
+func runDoctor() int {
+	result := doctor.Run()
+
+	fmt.Println("Env Doctor Report")
+	fmt.Println("------------------")
+
+	if result.EnvFileExists {
+		fmt.Println("[OK] .env file exists")
+	} else {
+		fmt.Println("[ERROR] .env file missing")
+	}
+
+	if result.ExampleFileExists {
+		fmt.Println("[OK] .env.example file exists")
+	} else {
+		fmt.Println("[WARNING] .env.example file missing")
+	}
+
+	return 0
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -139,7 +161,7 @@ func main() {
 	case "analyze":
 		os.Exit(runAnalyze())
 	case "doctor":
-		fmt.Println("doctor command not implemented yet")
+		os.Exit(runDoctor())
 	case "help", "--help", "-h":
 		printHelp()
 	default:
