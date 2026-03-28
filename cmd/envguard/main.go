@@ -41,6 +41,12 @@ func printValidateHelp() {
 	fmt.Println("  envguard validate --file .env.prod")
 	fmt.Println("  envguard validate --file .env.prod --example .env.example.prod")
 	fmt.Println("")
+	fmt.Println("Validation checks:")
+	fmt.Println("  - missing keys compared to the example file")
+	fmt.Println("  - duplicate keys in the target env file")
+	fmt.Println("  - unused keys not present in the example file")
+	fmt.Println("  - typed values from examples/.env.types")
+	fmt.Println("")
 	fmt.Println("Flags:")
 	fmt.Println("  --file      Target env file to validate")
 	fmt.Println("  --example   Example env file to compare against")
@@ -390,6 +396,12 @@ func getDoctorPaths(args []string) (string, string, error) {
 }
 
 func runValidate(envPath string, examplePath string) int {
+	schema, err := parser.LoadTypeSchema("examples/.env.types")
+	if err != nil {
+		fmt.Printf("Error: could not read type schema file: %v\n", err)
+		return 1
+	}
+
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
 		fmt.Printf("Error: could not read %s\n", envPath)
@@ -402,11 +414,12 @@ func runValidate(envPath string, examplePath string) int {
 		return 1
 	}
 
-	result := validator.ValidateEnv(envFile, exampleFile)
+	result := validator.ValidateEnv(envFile, exampleFile, schema)
 
 	sort.Strings(result.MissingKeys)
 	sort.Strings(result.DuplicateKeys)
 	sort.Strings(result.UnusedKeys)
+	sort.Strings(result.InvalidTypeValues)
 
 	fmt.Println("Env Validation Report")
 	fmt.Println("---------------------")
@@ -426,9 +439,9 @@ func runValidate(envPath string, examplePath string) int {
 		errorCount++
 	}
 
-	for _, key := range result.UnusedKeys {
-		fmt.Printf("[WARNING] Unused key: %s\n", key)
-		warningCount++
+	for _, issue := range result.InvalidTypeValues {
+		fmt.Printf("[ERROR] Invalid type: %s\n", issue)
+		errorCount++
 	}
 
 	if errorCount == 0 && warningCount == 0 {
