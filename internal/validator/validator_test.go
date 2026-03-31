@@ -130,4 +130,29 @@ func TestValidateEnv_ValidTypedValues(t *testing.T) {
 		t.Fatalf("expected 0 invalid type errors, got %d", len(result.InvalidTypeValues))
 	}
 }
-	
+
+func TestValidateEnv_EmptySchemaSkipsTypeValidation(t *testing.T) {
+	envFile := &models.EnvFile{
+		Values: map[string]string{
+			"DEBUG": "not-a-boolean",
+			"PORT":  "not-a-number",
+		},
+		Duplicates: map[string]int{},
+	}
+
+	exampleFile := &models.EnvFile{
+		Values: map[string]string{
+			"DEBUG": "",
+			"PORT":  "",
+		},
+		Duplicates: map[string]int{},
+	}
+
+	schema := map[string]string{}
+
+	result := ValidateEnv(envFile, exampleFile, schema)
+
+	if len(result.InvalidTypeValues) != 0 {
+		t.Fatalf("expected 0 invalid type errors when schema is empty, got %d", len(result.InvalidTypeValues))
+	}
+}

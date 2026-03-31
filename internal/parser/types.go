@@ -8,15 +8,18 @@ import (
 )
 
 func LoadTypeSchema(path string) (map[string]string, error) {
+	schema := make(map[string]string)
+
 	file, err := os.Open(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return schema, nil
+		}
 		return nil, fmt.Errorf("failed to open type schema file: %w", err)
 	}
 	defer file.Close()
 
-	schema := make(map[string]string)
 	scanner := bufio.NewScanner(file)
-
 	lineNumber := 0
 
 	for scanner.Scan() {

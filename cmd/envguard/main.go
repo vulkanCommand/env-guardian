@@ -396,10 +396,16 @@ func getDoctorPaths(args []string) (string, string, error) {
 }
 
 func runValidate(envPath string, examplePath string) int {
-	schema, err := parser.LoadTypeSchema("examples/.env.types")
+	schema := map[string]string{}
+
+	loadedSchema, err := parser.LoadTypeSchema("examples/.env.types")
 	if err != nil {
-		fmt.Printf("Error: could not read type schema file: %v\n", err)
-		return 1
+		if !os.IsNotExist(err) {
+			fmt.Printf("Error: could not read type schema file: %v\n", err)
+			return 1
+		}
+	} else {
+		schema = loadedSchema
 	}
 
 	envFile, err := parser.ParseEnvFile(envPath)
