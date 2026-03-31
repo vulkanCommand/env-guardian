@@ -25,6 +25,7 @@ func printHelp() {
 	fmt.Println("  envguard help doctor")
 	fmt.Println("  envguard version")
 	fmt.Println("  envguard validate")
+	fmt.Println("  envguard validate --all")
 	fmt.Println("  envguard validate --file .env.prod")
 	fmt.Println("  envguard validate --file .env.prod --example .env.example.prod")
 	fmt.Println("  envguard lint")
@@ -38,6 +39,7 @@ func printHelp() {
 func printValidateHelp() {
 	fmt.Println("Usage:")
 	fmt.Println("  envguard validate")
+	fmt.Println("  envguard validate --all")
 	fmt.Println("  envguard validate --file .env.prod")
 	fmt.Println("  envguard validate --file .env.prod --example .env.example.prod")
 	fmt.Println("")
@@ -48,6 +50,7 @@ func printValidateHelp() {
 	fmt.Println("  - typed values from examples/.env.types (optional)")
 	fmt.Println("")
 	fmt.Println("Flags:")
+	fmt.Println("  --all       Validate .env.dev, .env.prod, and .env.test")
 	fmt.Println("  --file      Target env file to validate")
 	fmt.Println("  --example   Example env file to compare against")
 }
@@ -89,6 +92,15 @@ func hasHelpFlag(args []string) bool {
 	return false
 }
 
+func hasAllFlag(args []string) bool {
+	for _, arg := range args {
+		if arg == "--all" {
+			return true
+		}
+	}
+	return false
+}
+
 func handleHelpCommand(args []string) int {
 	if len(args) == 0 {
 		printHelp()
@@ -124,11 +136,26 @@ func getValidatePaths(args []string) (string, string, error) {
 	examplePath := ".env.example"
 	fileFlagSeen := false
 	exampleFlagSeen := false
+	allFlagSeen := false
 
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 
+		if arg == "--all" {
+			if allFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --all")
+			}
+			if fileFlagSeen || exampleFlagSeen {
+				return "", "", fmt.Errorf("--all cannot be used with --file or --example")
+			}
+			allFlagSeen = true
+			continue
+		}
+
 		if arg == "--file" {
+			if allFlagSeen {
+				return "", "", fmt.Errorf("--all cannot be used with --file or --example")
+			}
 			if fileFlagSeen {
 				return "", "", fmt.Errorf("duplicate flag: --file")
 			}
@@ -148,6 +175,9 @@ func getValidatePaths(args []string) (string, string, error) {
 		}
 
 		if strings.HasPrefix(arg, "--file=") {
+			if allFlagSeen {
+				return "", "", fmt.Errorf("--all cannot be used with --file or --example")
+			}
 			if fileFlagSeen {
 				return "", "", fmt.Errorf("duplicate flag: --file")
 			}
@@ -163,6 +193,9 @@ func getValidatePaths(args []string) (string, string, error) {
 		}
 
 		if arg == "--example" {
+			if allFlagSeen {
+				return "", "", fmt.Errorf("--all cannot be used with --file or --example")
+			}
 			if exampleFlagSeen {
 				return "", "", fmt.Errorf("duplicate flag: --example")
 			}
@@ -182,6 +215,9 @@ func getValidatePaths(args []string) (string, string, error) {
 		}
 
 		if strings.HasPrefix(arg, "--example=") {
+			if allFlagSeen {
+				return "", "", fmt.Errorf("--all cannot be used with --file or --example")
+			}
 			if exampleFlagSeen {
 				return "", "", fmt.Errorf("duplicate flag: --example")
 			}
@@ -470,6 +506,67 @@ func runValidate(envPath string, examplePath string) int {
 	return 1
 }
 
+func runValidateAll() int {
+	envTargets := []struct {
+		envPath     string
+		examplePath string
+		label       string
+	}{
+		{envPath: ".env.dev", examplePath: ".env.example.dev", label: "dev"},
+		{envPath: ".env.prod", examplePath: ".env.example.prod", label: "prod"},
+		{envPath: ".env.test", examplePath: ".env.example.test", label: "test"},
+	}
+
+	finalExitCode := 0
+
+	fmt.Println("Env Validation Report")
+	fmt.Println("---------------------")
+	fmt.Println("Mode: --all")
+	fmt.Println("")
+
+	for i, target := range envTargets {
+		fmt.Printf("[%s]\n", target.label)
+
+		if _, err := os.Stat(target.envPath); err != nil {
+			if os.IsNotExist(err) {
+				fmt.Printf("[SKIP] %s missing\n", target.envPath)
+			} else {
+				fmt.Printf("[ERROR] could not access %s\n", target.envPath)
+				finalExitCode = 1
+			}
+
+			if i < len(envTargets)-1 {
+				fmt.Println("")
+			}
+			continue
+		}
+
+		if _, err := os.Stat(target.examplePath); err != nil {
+			if os.IsNotExist(err) {
+				fmt.Printf("[SKIP] %s missing\n", target.examplePath)
+			} else {
+				fmt.Printf("[ERROR] could not access %s\n", target.examplePath)
+				finalExitCode = 1
+			}
+
+			if i < len(envTargets)-1 {
+				fmt.Println("")
+			}
+			continue
+		}
+
+		exitCode := runValidate(target.envPath, target.examplePath)
+		if exitCode != 0 {
+			finalExitCode = 1
+		}
+
+		if i < len(envTargets)-1 {
+			fmt.Println("")
+		}
+	}
+
+	return finalExitCode
+}
 func runLint(envPath string) int {
 	result, err := linter.Run(envPath)
 	if err != nil {
@@ -628,6 +725,18 @@ func main() {
 		if hasHelpFlag(args[1:]) {
 			printValidateHelp()
 			os.Exit(0)
+		}
+		if hasAllFlag(args[1:]) {
+			envPath, examplePath, err := getValidatePaths(args[1:])
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+				os.Exit(1)
+			}
+			if envPath != ".env" || examplePath != ".env.example" {
+				fmt.Println("Error: --all cannot be used with --file or --example")
+				os.Exit(1)
+			}
+			os.Exit(runValidateAll())
 		}
 		envPath, examplePath, err := getValidatePaths(args[1:])
 		if err != nil {
