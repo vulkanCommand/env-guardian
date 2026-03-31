@@ -8,6 +8,7 @@ import (
 
 	"github.com/vulkanCommand/env-guardian/internal/analyzer"
 	"github.com/vulkanCommand/env-guardian/internal/linter"
+	"github.com/vulkanCommand/env-guardian/internal/models"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
 	"github.com/vulkanCommand/env-guardian/internal/validator"
 	"github.com/vulkanCommand/env-guardian/internal/version"
@@ -518,6 +519,8 @@ func runValidateAll() int {
 	}
 
 	finalExitCode := 0
+	envFiles := make(map[string]*models.EnvFile)
+	validationMissing := make(map[string]map[string]bool)
 
 	fmt.Println("Env Validation Report")
 	fmt.Println("---------------------")
@@ -555,6 +558,21 @@ func runValidateAll() int {
 			continue
 		}
 
+		envFile, err := parser.ParseEnvFile(target.envPath)
+		exampleFile, err2 := parser.ParseEnvFile(target.examplePath)
+
+		if err == nil && err2 == nil {
+			envFiles[target.label] = envFile
+
+			// capture validation missing keys
+			result := validator.ValidateEnv(envFile, exampleFile, map[string]string{})
+			missingSet := make(map[string]bool)
+			for _, key := range result.MissingKeys {
+				missingSet[key] = true
+			}
+			validationMissing[target.label] = missingSet
+		}
+
 		exitCode := runValidate(target.envPath, target.examplePath)
 		if exitCode != 0 {
 			finalExitCode = 1
@@ -562,6 +580,48 @@ func runValidateAll() int {
 
 		if i < len(envTargets)-1 {
 			fmt.Println("")
+		}
+	}
+
+	// consistency check
+	if len(envFiles) > 1 {
+		fmt.Println("====================================")
+		fmt.Println("Cross-Environment Consistency Check")
+		fmt.Println("====================================")
+
+		inconsistencies := validator.CompareEnvs(envFiles)
+
+		printedConsistencyIssue := false
+
+		if len(inconsistencies) == 0 {
+			fmt.Println("[PASS] All environments are consistent")
+		} else {
+			for env, missingKeys := range inconsistencies {
+				filtered := []string{}
+
+				for _, key := range missingKeys {
+					if validationMissing[env][key] {
+						continue
+					}
+					filtered = append(filtered, key)
+				}
+
+				if len(filtered) == 0 {
+					continue
+				}
+
+				printedConsistencyIssue = true
+
+				fmt.Printf("[%s]\n", env)
+				for _, key := range filtered {
+					fmt.Printf("[WARNING] Missing key across environments: %s\n", key)
+				}
+				fmt.Println("")
+			}
+
+			if !printedConsistencyIssue {
+				fmt.Println("[PASS] No additional cross-environment inconsistencies found")
+			}
 		}
 	}
 

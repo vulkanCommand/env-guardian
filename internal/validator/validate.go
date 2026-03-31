@@ -102,3 +102,33 @@ func isURL(value string) bool {
 
 	return parsed.Scheme != "" && parsed.Host != ""
 }
+
+func CompareEnvs(envFiles map[string]*models.EnvFile) map[string][]string {
+	result := make(map[string][]string)
+
+	// collect all unique keys across all environments
+	allKeys := make(map[string]bool)
+
+	for _, envFile := range envFiles {
+		for key := range envFile.Values {
+			allKeys[key] = true
+		}
+	}
+
+	// check missing keys per environment
+	for envName, envFile := range envFiles {
+		missing := []string{}
+
+		for key := range allKeys {
+			if _, exists := envFile.Values[key]; !exists {
+				missing = append(missing, key)
+			}
+		}
+
+		if len(missing) > 0 {
+			result[envName] = missing
+		}
+	}
+
+	return result
+}
