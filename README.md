@@ -29,6 +29,7 @@ Env Guardian helps you catch environment configuration issues early:
 
 ```bash
 envguard validate
+envguard validate --all
 envguard validate --file .env.prod
 envguard validate --example .env.example.prod
 envguard validate --file .env.prod --example .env.example.prod
@@ -39,6 +40,11 @@ Checks:
 - duplicate keys in the target env file
 - unused keys not present in the example file
 - typed validation from `examples/.env.types` when the schema file exists
+
+`--all`:
+- validates `.env.dev`, `.env.prod`, and `.env.test`
+- skips environments that do not exist
+- runs validation per environment with grouped output
 
 ### Lint
 
@@ -143,6 +149,7 @@ Completed in this version:
 - parser test coverage for missing schema fallback
 - validator test coverage for empty schema behavior
 - validate help updated to reflect optional schema behavior
+- multi-environment validation via `--all`
 
 ---
 
@@ -157,7 +164,6 @@ Completed in this version:
 - optional schema support
 
 ### Next
-- multi-environment support across `.env.dev`, `.env.prod`, `.env.test`
 - environment consistency checks across multiple env files
 - sync `.env` with `.env.example`
 - generate `.env.example` automatically
