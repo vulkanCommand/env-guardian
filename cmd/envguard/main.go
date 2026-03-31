@@ -45,7 +45,7 @@ func printValidateHelp() {
 	fmt.Println("  - missing keys compared to the example file")
 	fmt.Println("  - duplicate keys in the target env file")
 	fmt.Println("  - unused keys not present in the example file")
-	fmt.Println("  - typed values from examples/.env.types")
+	fmt.Println("  - typed values from examples/.env.types (optional)")
 	fmt.Println("")
 	fmt.Println("Flags:")
 	fmt.Println("  --file      Target env file to validate")
