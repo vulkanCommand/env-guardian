@@ -1,46 +1,33 @@
 # Env Guardian
 
-Env Guardian is a CLI tool to validate, lint, and analyze environment variables before they break your application.
+Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environment variables before they break your application.
 
-## Planned Commands
+---
 
-- envguard validate
-- envguard lint
-- envguard analyze
-- envguard doctor
+## Current Version
 
-## Current Status
+v0.1.3
 
-Initial CLI scaffold is working.
+---
 
-## Local Development
+## What It Does
 
-Build the binary
+Env Guardian helps you catch environment configuration issues early:
 
-go build -o envguard ./cmd/envguard
+- missing variables
+- duplicate variables
+- unused variables
+- invalid env syntax
+- invalid typed values (optional schema)
+- potential sensitive keys
 
-Run version
+---
 
-./envguard version
+## Commands
 
-Run help
+### Validate
 
-./envguard
-
-## Roadmap
-
-v1
-- validate
-- lint
-- analyze
-- doctor
-
-v1.1
-- secret leak scan
-- log exposure scan
-- repository secret detection
-
-v2
-- env encryption
-- env decryption
-- runtime environment verification
+```bash
+envguard validate
+envguard validate --file .env.prod
+envguard validate --file .env.prod --example .env.example.prod
