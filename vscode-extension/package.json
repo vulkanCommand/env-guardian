@@ -1,0 +1,80 @@
+{
+  "name": "env-guardian",
+  "displayName": "Env Guardian",
+  "description": "Run Env Guardian validation, security, and log exposure checks from VS Code.",
+  "version": "0.1.9",
+  "publisher": "vulkanCommand",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:envGuardian.validate",
+    "onCommand:envGuardian.validateAll",
+    "onCommand:envGuardian.ci",
+    "onCommand:envGuardian.security",
+    "onCommand:envGuardian.logScan",
+    "onCommand:envGuardian.version"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "envGuardian.validate",
+        "title": "Env Guardian: Validate"
+      },
+      {
+        "command": "envGuardian.validateAll",
+        "title": "Env Guardian: Validate All Environments"
+      },
+      {
+        "command": "envGuardian.ci",
+        "title": "Env Guardian: Run CI Check"
+      },
+      {
+        "command": "envGuardian.security",
+        "title": "Env Guardian: Run Security Scan"
+      },
+      {
+        "command": "envGuardian.logScan",
+        "title": "Env Guardian: Run Log Exposure Scan"
+      },
+      {
+        "command": "envGuardian.version",
+        "title": "Env Guardian: Show Version"
+      }
+    ],
+    "configuration": {
+      "title": "Env Guardian",
+      "properties": {
+        "envGuardian.executablePath": {
+          "type": "string",
+          "default": "envguard",
+          "description": "Path to the envguard executable."
+        },
+        "envGuardian.envFile": {
+          "type": "string",
+          "default": ".env",
+          "description": "Target env file used by validation commands."
+        },
+        "envGuardian.exampleFile": {
+          "type": "string",
+          "default": ".env.example",
+          "description": "Example env file used by validation commands."
+        },
+        "envGuardian.rootDirectory": {
+          "type": "string",
+          "default": ".",
+          "description": "Root directory used by scan commands."
+        },
+        "envGuardian.useJson": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run supported commands with --json output."
+        }
+      }
+    }
+  }
+}

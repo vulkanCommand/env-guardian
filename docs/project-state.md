@@ -6,16 +6,16 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and d
 ---
 
 ## Current Version
-v0.1.8
+v0.1.9
 
 ---
 
 ## Current Status
-## v0.1.8 COMPLETE
+## v0.1.9 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, and GitHub Actions automation.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, and VS Code command palette integration.
 
-The CLI is stable for the completed backend roadmap blocks up through Developer Experience JSON and CI automation.
+The CLI is stable for the completed backend roadmap blocks up through Developer Experience.
 
 ---
 
@@ -150,6 +150,8 @@ The CLI is stable for the completed backend roadmap blocks up through Developer 
   - `envguard docker --json`
   - `envguard ci --json`
 - `.github/workflows/envguard.yml` runs Go tests, builds the CLI, and runs Env Guardian checks in GitHub Actions
+- `vscode-extension/` provides command palette actions that run the existing `envguard` executable
+- VS Code settings support executable path, env file, example file, root directory, and JSON output
 
 ---
 
@@ -286,13 +288,16 @@ The CLI is stable for the completed backend roadmap blocks up through Developer 
 - pre-start validation wrapper
 - JSON output
 - GitHub Action workflow
+- VS Code extension
 
 ---
 
 ## Remaining Work (Next Phases)
 
-### Next Feature Block - Developer Experience Polish
-- VS Code extension
+### Next Feature Block - Final UX Polish
+- release packaging
+- final docs pass
+- CLI output polish
 
 ---
 
@@ -303,8 +308,8 @@ The CLI is stable for the completed backend roadmap blocks up through Developer 
 4. Log Exposure Protection (DONE)
 5. Encryption (DONE)
 6. DevOps (DONE)
-7. Developer Experience (PARTIAL DONE)
-8. Final UX polish
+7. Developer Experience (DONE)
+8. Final UX polish (NEXT)
 
 No jumping ahead.
 
@@ -312,11 +317,11 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.8
+- version: v0.1.9
 - CLI stable
-- ready for Developer Experience polish
+- ready for Final UX polish
 
 ---
 
 ## Next Step
-Continue **Developer Experience** with VS Code extension planning/implementation
+Start **Final UX polish**

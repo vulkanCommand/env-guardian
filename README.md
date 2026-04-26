@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.8
+v0.1.9
 
 ---
 
@@ -26,6 +26,7 @@ Env Guardian helps you catch environment configuration issues early:
 - encrypted environment files
 - Docker and runtime environment checks
 - JSON output for automation and CI
+- VS Code command palette integration
 
 ---
 
@@ -203,6 +204,11 @@ envguard ci --json
 GitHub Actions:
 - `.github/workflows/envguard.yml` runs tests, builds the CLI, prepares `.env` from `.env.example`, and runs CI/security/log exposure checks with JSON output.
 
+VS Code:
+- `vscode-extension/` contains a lightweight extension that runs the existing `envguard` executable from the command palette.
+- commands include Validate, Validate All Environments, CI Check, Security Scan, Log Exposure Scan, and Show Version.
+- settings allow configuring executable path, target env file, example env file, root directory, and JSON output.
+
 ---
 
 ## Type Validation
@@ -257,12 +263,12 @@ go test ./...
 
 ## Current Status
 
-v0.1.8 is complete.
+v0.1.9 is complete.
 
 Completed in this version:
-- JSON output for report-style commands
-- `--json` help and strict duplicate flag handling
-- GitHub Actions workflow for automated project checks
+- VS Code extension scaffold
+- command palette actions for validation, CI, security, log exposure, and version checks
+- extension settings for executable path, env files, root directory, and JSON output
 
 ---
 
@@ -283,12 +289,13 @@ Completed in this version:
 - DevOps/runtime validation
 - Developer Experience JSON output
 - GitHub Action
-
-### Next
 - VS Code extension
 
-### Later
+### Next
 - Final UX polish
+
+### Later
+- Release packaging
 
 ---
 
