@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.6
+v0.1.7
 
 ---
 
@@ -24,6 +24,7 @@ Env Guardian helps you catch environment configuration issues early:
 - secret leaks in env files, repository files, and git history
 - accidental logging of environment secrets
 - encrypted environment files
+- Docker and runtime environment checks
 
 ---
 
@@ -130,6 +131,22 @@ Checks:
 - decrypts Env Guardian encrypted files
 - writes output to the selected file
 
+### DevOps / Runtime
+
+```bash
+envguard docker
+envguard docker --dockerfile Dockerfile --file .env.prod
+envguard ci
+envguard ci --file .env.prod --example .env.example.prod
+envguard run -- go run ./cmd/envguard
+envguard run --file .env.prod --example .env.example.prod -- ./app
+```
+
+Checks:
+- Dockerfile `ARG`, `ENV`, `$KEY`, and `${KEY}` references
+- fail-fast CI validation for lint, required keys, duplicates, and typed values
+- pre-start validation before running an application command
+
 ### Scan Code
 
 ```bash
@@ -210,14 +227,13 @@ go test ./...
 
 ## Current Status
 
-v0.1.6 is complete.
+v0.1.7 is complete.
 
 Completed in this version:
-- `encrypt` command
-- `decrypt` command
-- key-based AES-GCM env file encryption
-- encrypted file format validation
-- encryption/decryption unit tests
+- Dockerfile environment validation
+- CI/CD validation mode
+- pre-start validation wrapper
+- runtime command tests
 
 ---
 
@@ -235,12 +251,12 @@ Completed in this version:
 - security scanning
 - log exposure protection
 - encryption
-
-### Next
 - DevOps/runtime validation
 
+### Next
+- JSON output
+
 ### Later
-- CI/CD integration
 - GitHub Action
 - VS Code extension
 

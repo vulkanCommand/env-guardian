@@ -6,16 +6,16 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and d
 ---
 
 ## Current Version
-v0.1.6
+v0.1.7
 
 ---
 
 ## Current Status
-## v0.1.6 COMPLETE
+## v0.1.7 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, and encryption.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, and DevOps/runtime validation.
 
-The CLI is stable for the completed backend roadmap blocks up through Encryption.
+The CLI is stable for the completed backend roadmap blocks up through DevOps / Runtime.
 
 ---
 
@@ -126,6 +126,16 @@ The CLI is stable for the completed backend roadmap blocks up through Encryption
 
 ---
 
+### DevOps / Runtime
+- `docker` command
+- `ci` command
+- `run` command
+- validates Dockerfile `ARG`, `ENV`, `$KEY`, and `${KEY}` references against an env file
+- runs fail-fast CI checks for linting, required keys, duplicates, and typed values
+- validates env configuration before starting an application command
+
+---
+
 ### Workflow Commands
 
 #### Generate Example
@@ -197,6 +207,14 @@ The CLI is stable for the completed backend roadmap blocks up through Encryption
 - `envguard decrypt`
 - `envguard decrypt --file --out`
 
+### DevOps / Runtime
+- `envguard docker`
+- `envguard docker --dockerfile --file`
+- `envguard ci`
+- `envguard ci --file --example`
+- `envguard run -- <command>`
+- `envguard run --file --example -- <command>`
+
 ### Workflow
 - `envguard generate-example`
 - `envguard sync-example`
@@ -213,6 +231,7 @@ The CLI is stable for the completed backend roadmap blocks up through Encryption
 - `internal/security` - env, repository, git history security checks
 - `internal/logscan` - log exposure scanning
 - `internal/encryption` - env file encryption/decryption
+- `internal/runtimecheck` - Docker and runtime environment checks
 - `internal/doctor` - diagnostics
 - `internal/version` - version constant
 
@@ -245,19 +264,15 @@ The CLI is stable for the completed backend roadmap blocks up through Encryption
 - env encrypt
 - env decrypt
 - secure key-based encryption for environment secrets
-
----
-
-## Remaining Work (Next Phases)
-
-### Next Feature Block - DevOps / Runtime
 - Docker validation
 - CI/CD validation mode
 - pre-start validation wrapper
 
 ---
 
-### Developer Experience
+## Remaining Work (Next Phases)
+
+### Next Feature Block - Developer Experience
 - JSON output
 - GitHub Action
 - VS Code extension
@@ -270,8 +285,8 @@ The CLI is stable for the completed backend roadmap blocks up through Encryption
 3. Security (DONE)
 4. Log Exposure Protection (DONE)
 5. Encryption (DONE)
-6. DevOps (NEXT)
-7. Developer Experience
+6. DevOps (DONE)
+7. Developer Experience (NEXT)
 8. Final UX polish
 
 No jumping ahead.
@@ -280,11 +295,11 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.6
+- version: v0.1.7
 - CLI stable
-- ready for DevOps / Runtime feature block
+- ready for Developer Experience feature block
 
 ---
 
 ## Next Step
-Start **DevOps / Runtime** feature block
+Start **Developer Experience** feature block

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"sort"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/vulkanCommand/env-guardian/internal/logscan"
 	"github.com/vulkanCommand/env-guardian/internal/models"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
+	"github.com/vulkanCommand/env-guardian/internal/runtimecheck"
 	"github.com/vulkanCommand/env-guardian/internal/security"
 	"github.com/vulkanCommand/env-guardian/internal/validator"
 	"github.com/vulkanCommand/env-guardian/internal/version"
@@ -33,6 +35,9 @@ func printHelp() {
 	fmt.Println("  envguard help log-scan")
 	fmt.Println("  envguard help encrypt")
 	fmt.Println("  envguard help decrypt")
+	fmt.Println("  envguard help docker")
+	fmt.Println("  envguard help ci")
+	fmt.Println("  envguard help run")
 	fmt.Println("  envguard version")
 	fmt.Println("  envguard validate")
 	fmt.Println("  envguard validate --all")
@@ -55,6 +60,11 @@ func printHelp() {
 	fmt.Println("  envguard encrypt --file .env.prod --out .env.prod.enc")
 	fmt.Println("  envguard decrypt")
 	fmt.Println("  envguard decrypt --file .env.prod.enc --out .env.prod")
+	fmt.Println("  envguard docker")
+	fmt.Println("  envguard docker --dockerfile Dockerfile --file .env.prod")
+	fmt.Println("  envguard ci")
+	fmt.Println("  envguard ci --file .env.prod --example .env.example.prod")
+	fmt.Println("  envguard run -- go run ./cmd/envguard")
 	fmt.Println("  envguard generate-example")
 	fmt.Println("  envguard sync-example")
 }
@@ -193,6 +203,52 @@ func printDecryptHelp() {
 	fmt.Println("  --out       Decrypted output file")
 }
 
+func printDockerHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard docker")
+	fmt.Println("  envguard docker --dockerfile Dockerfile --file .env.prod")
+	fmt.Println("")
+	fmt.Println("Checks:")
+	fmt.Println("  - Dockerfile ARG and ENV variables")
+	fmt.Println("  - Dockerfile $KEY and ${KEY} references")
+	fmt.Println("  - missing Docker runtime keys in the env file")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --dockerfile   Dockerfile path to inspect")
+	fmt.Println("  --file         Env file to compare against")
+}
+
+func printCIHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard ci")
+	fmt.Println("  envguard ci --file .env.prod --example .env.example.prod")
+	fmt.Println("")
+	fmt.Println("Checks:")
+	fmt.Println("  - env syntax linting")
+	fmt.Println("  - required key validation")
+	fmt.Println("  - duplicate key validation")
+	fmt.Println("  - optional type validation")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --file      Target env file to validate")
+	fmt.Println("  --example   Example env file to compare against")
+}
+
+func printRunHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard run -- <command>")
+	fmt.Println("  envguard run --file .env.prod --example .env.example.prod -- <command>")
+	fmt.Println("")
+	fmt.Println("Runtime wrapper:")
+	fmt.Println("  - validates env configuration before starting a command")
+	fmt.Println("  - runs the command only when validation passes")
+	fmt.Println("  - returns the wrapped command exit code")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --file      Target env file to validate")
+	fmt.Println("  --example   Example env file to compare against")
+}
+
 func hasHelpFlag(args []string) bool {
 	for _, arg := range args {
 		if arg == "--help" || arg == "-h" {
@@ -249,6 +305,15 @@ func handleHelpCommand(args []string) int {
 		return 0
 	case "decrypt":
 		printDecryptHelp()
+		return 0
+	case "docker":
+		printDockerHelp()
+		return 0
+	case "ci":
+		printCIHelp()
+		return 0
+	case "run":
+		printRunHelp()
 		return 0
 	default:
 		fmt.Printf("Error: unknown help topic: %s\n", args[0])
@@ -785,6 +850,119 @@ func getCryptoPaths(args []string, defaultInputPath string, defaultOutputPath st
 	return inputPath, outputPath, nil
 }
 
+func getDockerOptions(args []string) (string, string, error) {
+	dockerfilePath := "Dockerfile"
+	envPath := ".env"
+	dockerfileFlagSeen := false
+	fileFlagSeen := false
+
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		if arg == "--dockerfile" {
+			if dockerfileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --dockerfile")
+			}
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("missing value for --dockerfile")
+			}
+
+			next := args[i+1]
+			if strings.HasPrefix(next, "--") {
+				return "", "", fmt.Errorf("missing value for --dockerfile")
+			}
+
+			dockerfilePath = next
+			dockerfileFlagSeen = true
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--dockerfile=") {
+			if dockerfileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --dockerfile")
+			}
+
+			value := strings.TrimPrefix(arg, "--dockerfile=")
+			if value == "" {
+				return "", "", fmt.Errorf("missing value for --dockerfile")
+			}
+
+			dockerfilePath = value
+			dockerfileFlagSeen = true
+			continue
+		}
+
+		if arg == "--file" {
+			if fileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --file")
+			}
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			next := args[i+1]
+			if strings.HasPrefix(next, "--") {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			envPath = next
+			fileFlagSeen = true
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--file=") {
+			if fileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --file")
+			}
+
+			value := strings.TrimPrefix(arg, "--file=")
+			if value == "" {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			envPath = value
+			fileFlagSeen = true
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--") {
+			return "", "", fmt.Errorf("unknown flag: %s", arg)
+		}
+
+		return "", "", fmt.Errorf("unexpected argument: %s", arg)
+	}
+
+	return dockerfilePath, envPath, nil
+}
+
+func getRunOptions(args []string) (string, string, []string, error) {
+	separatorIndex := -1
+	for i, arg := range args {
+		if arg == "--" {
+			separatorIndex = i
+			break
+		}
+	}
+
+	if separatorIndex == -1 {
+		return "", "", nil, fmt.Errorf("missing command separator: --")
+	}
+
+	envPath, examplePath, err := getValidatePaths(args[:separatorIndex])
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	commandArgs := args[separatorIndex+1:]
+	if len(commandArgs) == 0 {
+		return "", "", nil, fmt.Errorf("missing command to run")
+	}
+
+	return envPath, examplePath, commandArgs, nil
+}
+
 func runValidate(envPath string, examplePath string) int {
 	schema := map[string]string{}
 
@@ -1264,6 +1442,146 @@ func runDecrypt(inputPath string, outputPath string) int {
 	return 0
 }
 
+func runDocker(dockerfilePath string, envPath string) int {
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		fmt.Printf("Error: could not read %s\n", envPath)
+		return 1
+	}
+
+	result, err := runtimecheck.ValidateDockerfile(dockerfilePath, envFile.Values)
+	if err != nil {
+		fmt.Printf("Error: could not read %s\n", dockerfilePath)
+		return 1
+	}
+
+	fmt.Println("Docker Env Validation Report")
+	fmt.Println("----------------------------")
+	fmt.Printf("Dockerfile: %s\n", dockerfilePath)
+	fmt.Printf("Env file: %s\n", envPath)
+	fmt.Printf("Referenced keys: %d\n\n", len(result.ReferencedKeys))
+
+	if len(result.MissingKeys) == 0 {
+		fmt.Println("[PASS] Docker environment references are satisfied")
+		fmt.Println("")
+		fmt.Printf("Summary: %d missing Docker key(s)\n", len(result.MissingKeys))
+		return 0
+	}
+
+	for _, key := range result.MissingKeys {
+		fmt.Printf("[ERROR] Missing Docker env key: %s\n", key)
+	}
+
+	fmt.Println("")
+	fmt.Printf("Summary: %d missing Docker key(s)\n", len(result.MissingKeys))
+
+	return 1
+}
+
+func runCI(envPath string, examplePath string) int {
+	fmt.Println("Env CI Report")
+	fmt.Println("-------------")
+	fmt.Printf("Target file: %s\n", envPath)
+	fmt.Printf("Example file: %s\n\n", examplePath)
+
+	errorCount := 0
+
+	lintResult, err := linter.Run(envPath)
+	if err != nil {
+		fmt.Printf("[ERROR] could not lint %s\n", envPath)
+		return 1
+	}
+
+	for _, issue := range lintResult.InvalidLines {
+		fmt.Printf("[ERROR] Lint: %s\n", issue)
+		errorCount++
+	}
+
+	schema := map[string]string{}
+	loadedSchema, err := parser.LoadTypeSchema("examples/.env.types")
+	if err != nil {
+		if !os.IsNotExist(err) {
+			fmt.Printf("[ERROR] could not read type schema file: %v\n", err)
+			errorCount++
+		}
+	} else {
+		schema = loadedSchema
+	}
+
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		fmt.Printf("[ERROR] could not read %s\n", envPath)
+		return 1
+	}
+
+	exampleFile, err := parser.ParseEnvFile(examplePath)
+	if err != nil {
+		fmt.Printf("[ERROR] could not read %s\n", examplePath)
+		return 1
+	}
+
+	result := validator.ValidateEnv(envFile, exampleFile, schema)
+
+	sort.Strings(result.MissingKeys)
+	sort.Strings(result.DuplicateKeys)
+	sort.Strings(result.InvalidTypeValues)
+
+	for _, key := range result.MissingKeys {
+		fmt.Printf("[ERROR] Missing key: %s\n", key)
+		errorCount++
+	}
+
+	for _, key := range result.DuplicateKeys {
+		fmt.Printf("[ERROR] Duplicate key: %s\n", key)
+		errorCount++
+	}
+
+	for _, issue := range result.InvalidTypeValues {
+		fmt.Printf("[ERROR] Invalid type: %s\n", issue)
+		errorCount++
+	}
+
+	if errorCount == 0 {
+		fmt.Println("[PASS] CI environment validation passed")
+		fmt.Println("")
+		fmt.Printf("Summary: %d CI error(s)\n", errorCount)
+		return 0
+	}
+
+	fmt.Println("")
+	fmt.Printf("Summary: %d CI error(s)\n", errorCount)
+
+	return 1
+}
+
+func runPreStart(envPath string, examplePath string, commandArgs []string) int {
+	validationExitCode := runValidate(envPath, examplePath)
+	if validationExitCode != 0 {
+		fmt.Println("")
+		fmt.Println("[ERROR] Pre-start validation failed")
+		return validationExitCode
+	}
+
+	fmt.Println("")
+	fmt.Printf("[RUN] %s\n", strings.Join(commandArgs, " "))
+
+	command := exec.Command(commandArgs[0], commandArgs[1:]...)
+	command.Stdin = os.Stdin
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+
+	if err := command.Run(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return exitError.ExitCode()
+		}
+
+		fmt.Printf("Error: could not run command: %v\n", err)
+		return 1
+	}
+
+	return 0
+}
+
 func runScanCode(dirPath string, envPath string) int {
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
@@ -1546,6 +1864,39 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(runDecrypt(inputPath, outputPath))
+	case "docker":
+		if hasHelpFlag(args[1:]) {
+			printDockerHelp()
+			os.Exit(0)
+		}
+		dockerfilePath, envPath, err := getDockerOptions(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runDocker(dockerfilePath, envPath))
+	case "ci":
+		if hasHelpFlag(args[1:]) {
+			printCIHelp()
+			os.Exit(0)
+		}
+		envPath, examplePath, err := getValidatePaths(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runCI(envPath, examplePath))
+	case "run":
+		if hasHelpFlag(args[1:]) {
+			printRunHelp()
+			os.Exit(0)
+		}
+		envPath, examplePath, commandArgs, err := getRunOptions(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runPreStart(envPath, examplePath, commandArgs))
 	case "generate-example":
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
