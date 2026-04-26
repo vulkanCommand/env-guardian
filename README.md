@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.9
+v0.1.10
 
 ---
 
@@ -27,10 +27,55 @@ Env Guardian helps you catch environment configuration issues early:
 - Docker and runtime environment checks
 - JSON output for automation and CI
 - VS Code command palette integration
+- polished launch-ready CLI help and support links
+
+---
+
+## Installation
+
+```text
++------------------------------------------------------------+
+| Env Guardian                                               |
+| Production-grade env validation for modern teams           |
++------------------------------------------------------------+
+| Install from source                                        |
+|   git clone https://github.com/vulkanCommand/env-guardian  |
+|   cd env-guardian                                          |
+|   go build -o envguard ./cmd/envguard                      |
+|   ./envguard                                               |
++------------------------------------------------------------+
+| Support                                                    |
+|   Email:  gdkalyan2109@gmail.com                           |
+|   Issues: github.com/vulkanCommand/env-guardian/issues     |
++------------------------------------------------------------+
+```
+
+Unix install helper:
+
+```bash
+./scripts/install.sh
+```
+
+Manual build:
+
+```bash
+go build -o envguard ./cmd/envguard
+```
+
+Run after install:
+
+```bash
+envguard
+envguard validate
+envguard security
+envguard ci --json
+```
 
 ---
 
 ## Commands
+
+When opened without arguments, Env Guardian shows a title card, a command overview, quick-start examples, and support links.
 
 ### Validate
 
@@ -261,14 +306,21 @@ go test ./...
 
 ---
 
+## Support
+
+- Email: `gdkalyan2109@gmail.com`
+- Issues: `https://github.com/vulkanCommand/env-guardian/issues`
+
+---
+
 ## Current Status
 
-v0.1.9 is complete.
+v0.1.10 is complete.
 
 Completed in this version:
-- VS Code extension scaffold
-- command palette actions for validation, CI, security, log exposure, and version checks
-- extension settings for executable path, env files, root directory, and JSON output
+- launch-ready CLI title card and command overview
+- installation and support documentation
+- release packaging scripts, release workflow, and final public docs
 
 ---
 
@@ -290,12 +342,13 @@ Completed in this version:
 - Developer Experience JSON output
 - GitHub Action
 - VS Code extension
-
-### Next
 - Final UX polish
 
+### Next
+- Open-source launch
+
 ### Later
-- Release packaging
+- Homebrew, npm wrapper, and VS Code marketplace publishing
 
 ---
 

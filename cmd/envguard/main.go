@@ -22,53 +22,49 @@ import (
 )
 
 func printHelp() {
-	fmt.Println("envguard")
-	fmt.Println("A CLI tool to validate, lint, analyze, and secure environment variables.")
+	printTitleCard()
 	fmt.Println("")
-	fmt.Println("Usage:")
-	fmt.Println("  envguard help")
-	fmt.Println("  envguard help validate")
-	fmt.Println("  envguard help lint")
-	fmt.Println("  envguard help analyze")
-	fmt.Println("  envguard help doctor")
-	fmt.Println("  envguard help scan-code")
-	fmt.Println("  envguard help security")
-	fmt.Println("  envguard help log-scan")
-	fmt.Println("  envguard help encrypt")
-	fmt.Println("  envguard help decrypt")
-	fmt.Println("  envguard help docker")
-	fmt.Println("  envguard help ci")
-	fmt.Println("  envguard help run")
-	fmt.Println("  envguard version")
+	fmt.Println("COMMANDS")
+	fmt.Println("  validate          Validate .env against .env.example")
+	fmt.Println("  lint              Check env file syntax")
+	fmt.Println("  analyze           Inspect empty values and sensitive-looking keys")
+	fmt.Println("  doctor            Diagnose missing files, keys, and tracked env files")
+	fmt.Println("  scan-code         Compare env usage in code against an env file")
+	fmt.Println("  security          Scan env files, repository files, and git history")
+	fmt.Println("  log-scan          Detect accidental env value logging")
+	fmt.Println("  encrypt           Encrypt an env file with ENVGUARD_KEY")
+	fmt.Println("  decrypt           Decrypt an Env Guardian encrypted file")
+	fmt.Println("  docker            Validate Dockerfile env references")
+	fmt.Println("  ci                Run fail-fast validation for CI")
+	fmt.Println("  run               Validate env config before starting a command")
+	fmt.Println("  generate-example  Create .env.example from an env file")
+	fmt.Println("  sync-example      Append missing keys to .env.example")
+	fmt.Println("  version           Print the Env Guardian version")
+	fmt.Println("")
+	fmt.Println("QUICK START")
 	fmt.Println("  envguard validate")
-	fmt.Println("  envguard validate --all")
-	fmt.Println("  envguard validate --file .env.prod")
-	fmt.Println("  envguard validate --file .env.prod --example .env.example.prod")
-	fmt.Println("  envguard lint")
-	fmt.Println("  envguard lint --file .env.prod")
-	fmt.Println("  envguard analyze")
-	fmt.Println("  envguard analyze --file .env.prod")
-	fmt.Println("  envguard doctor")
-	fmt.Println("  envguard doctor --file .env.prod --example .env.example.prod")
-	fmt.Println("  envguard scan-code")
-	fmt.Println("  envguard scan-code --dir .")
-	fmt.Println("  envguard scan-code --dir . --file .env.prod")
 	fmt.Println("  envguard security")
-	fmt.Println("  envguard security --dir . --file .env.prod")
-	fmt.Println("  envguard log-scan")
-	fmt.Println("  envguard log-scan --dir .")
-	fmt.Println("  envguard encrypt")
-	fmt.Println("  envguard encrypt --file .env.prod --out .env.prod.enc")
-	fmt.Println("  envguard decrypt")
-	fmt.Println("  envguard decrypt --file .env.prod.enc --out .env.prod")
-	fmt.Println("  envguard docker")
-	fmt.Println("  envguard docker --dockerfile Dockerfile --file .env.prod")
-	fmt.Println("  envguard ci")
-	fmt.Println("  envguard ci --file .env.prod --example .env.example.prod")
 	fmt.Println("  envguard ci --json")
-	fmt.Println("  envguard run -- go run ./cmd/envguard")
-	fmt.Println("  envguard generate-example")
-	fmt.Println("  envguard sync-example")
+	fmt.Println("")
+	fmt.Println("HELP")
+	fmt.Println("  envguard help <command>")
+	fmt.Println("  envguard help validate")
+	fmt.Println("")
+	printSupport()
+}
+
+func printTitleCard() {
+	fmt.Println("+------------------------------------------------------------+")
+	fmt.Println("| Env Guardian                                               |")
+	fmt.Printf("| Version %-50s |\n", version.Version)
+	fmt.Println("| Validate, secure, encrypt, and ship env files safely.      |")
+	fmt.Println("+------------------------------------------------------------+")
+}
+
+func printSupport() {
+	fmt.Println("SUPPORT")
+	fmt.Println("  Email:  gdkalyan2109@gmail.com")
+	fmt.Println("  Issues: https://github.com/vulkanCommand/env-guardian/issues")
 }
 
 func printValidateHelp() {
@@ -260,6 +256,34 @@ func printRunHelp() {
 	fmt.Println("  --example   Example env file to compare against")
 }
 
+func printGenerateExampleHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard generate-example")
+	fmt.Println("  envguard generate-example --file .env.prod")
+	fmt.Println("")
+	fmt.Println("Workflow:")
+	fmt.Println("  - reads keys from the target env file")
+	fmt.Println("  - writes .env.example with empty values")
+	fmt.Println("  - overwrites the existing .env.example file")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --file      Source env file to read")
+}
+
+func printSyncExampleHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard sync-example")
+	fmt.Println("  envguard sync-example --file .env.prod")
+	fmt.Println("")
+	fmt.Println("Workflow:")
+	fmt.Println("  - reads keys from the target env file")
+	fmt.Println("  - appends missing keys to .env.example")
+	fmt.Println("  - does not overwrite existing example keys")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --file      Source env file to read")
+}
+
 func hasHelpFlag(args []string) bool {
 	for _, arg := range args {
 		if arg == "--help" || arg == "-h" {
@@ -344,6 +368,12 @@ func handleHelpCommand(args []string) int {
 		return 0
 	case "run":
 		printRunHelp()
+		return 0
+	case "generate-example":
+		printGenerateExampleHelp()
+		return 0
+	case "sync-example":
+		printSyncExampleHelp()
 		return 0
 	default:
 		fmt.Printf("Error: unknown help topic: %s\n", args[0])
@@ -2742,6 +2772,10 @@ func main() {
 		}
 		os.Exit(runPreStart(envPath, examplePath, commandArgs))
 	case "generate-example":
+		if hasHelpFlag(args[1:]) {
+			printGenerateExampleHelp()
+			os.Exit(0)
+		}
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -2749,6 +2783,10 @@ func main() {
 		}
 		os.Exit(runGenerateExample(envPath))
 	case "sync-example":
+		if hasHelpFlag(args[1:]) {
+			printSyncExampleHelp()
+			os.Exit(0)
+		}
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)

@@ -6,16 +6,16 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and d
 ---
 
 ## Current Version
-v0.1.9
+v0.1.10
 
 ---
 
 ## Current Status
-## v0.1.9 COMPLETE
+## v0.1.10 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, and VS Code command palette integration.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, and launch-ready UX polish.
 
-The CLI is stable for the completed backend roadmap blocks up through Developer Experience.
+The CLI is stable for the completed backend roadmap blocks through Final UX polish.
 
 ---
 
@@ -177,6 +177,22 @@ The CLI is stable for the completed backend roadmap blocks up through Developer 
 - command-specific help
 - strict flag validation
 - consistent output formatting
+- polished root title card
+- grouped command overview
+- quick-start examples
+- support email and GitHub Issues link
+
+---
+
+### Open Source Launch
+- MIT license
+- contributing guide
+- security policy
+- changelog
+- install script
+- release packaging script
+- tag-based release workflow
+- public docs for architecture, commands, errors, output format, roadmap, and schema
 
 ---
 
@@ -289,15 +305,20 @@ The CLI is stable for the completed backend roadmap blocks up through Developer 
 - JSON output
 - GitHub Action workflow
 - VS Code extension
+- final CLI title card
+- public launch docs
+- install and release scripts
+- release artifact workflow
+- open-source support files
 
 ---
 
 ## Remaining Work (Next Phases)
 
-### Next Feature Block - Final UX Polish
-- release packaging
-- final docs pass
-- CLI output polish
+### Next Feature Block - Open Source Launch
+- create first GitHub release
+- attach release artifacts
+- publish announcement
 
 ---
 
@@ -309,7 +330,7 @@ The CLI is stable for the completed backend roadmap blocks up through Developer 
 5. Encryption (DONE)
 6. DevOps (DONE)
 7. Developer Experience (DONE)
-8. Final UX polish (NEXT)
+8. Final UX polish (DONE)
 
 No jumping ahead.
 
@@ -317,11 +338,11 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.9
+- version: v0.1.10
 - CLI stable
-- ready for Final UX polish
+- ready for open-source launch
 
 ---
 
 ## Next Step
-Start **Final UX polish**
+Launch **Env Guardian** as open source
