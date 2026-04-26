@@ -1,21 +1,21 @@
 # Env Guardian - Project State
 
 ## Project Goal
-Env Guardian is a Go CLI tool to validate, lint, analyze, secure, and diagnose environment variables before they break applications.
+Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and diagnose environment variables before they break applications.
 
 ---
 
 ## Current Version
-v0.1.5
+v0.1.6
 
 ---
 
 ## Current Status
-## v0.1.5 COMPLETE
+## v0.1.6 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, and log exposure protection.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, and encryption.
 
-The CLI is stable for the completed backend roadmap blocks up through Log Exposure Protection.
+The CLI is stable for the completed backend roadmap blocks up through Encryption.
 
 ---
 
@@ -116,6 +116,16 @@ The CLI is stable for the completed backend roadmap blocks up through Log Exposu
 
 ---
 
+### Encryption
+- `encrypt` command
+- `decrypt` command
+- reads encryption key from `ENVGUARD_KEY`
+- encrypts env files with AES-GCM
+- writes encrypted payloads in Env Guardian v1 format
+- decrypts Env Guardian encrypted files back to plaintext env files
+
+---
+
 ### Workflow Commands
 
 #### Generate Example
@@ -181,6 +191,12 @@ The CLI is stable for the completed backend roadmap blocks up through Log Exposu
 - `envguard log-scan`
 - `envguard log-scan --dir`
 
+### Encryption
+- `envguard encrypt`
+- `envguard encrypt --file --out`
+- `envguard decrypt`
+- `envguard decrypt --file --out`
+
 ### Workflow
 - `envguard generate-example`
 - `envguard sync-example`
@@ -196,6 +212,7 @@ The CLI is stable for the completed backend roadmap blocks up through Log Exposu
 - `internal/codebase` - codebase env usage scanning
 - `internal/security` - env, repository, git history security checks
 - `internal/logscan` - log exposure scanning
+- `internal/encryption` - env file encryption/decryption
 - `internal/doctor` - diagnostics
 - `internal/version` - version constant
 
@@ -225,19 +242,15 @@ The CLI is stable for the completed backend roadmap blocks up through Log Exposu
 - env log scan
 - accidental logging detection
 - log file secret detection
-
----
-
-## Remaining Work (Next Phases)
-
-### Next Feature Block - Encryption
 - env encrypt
 - env decrypt
 - secure key-based encryption for environment secrets
 
 ---
 
-### DevOps / Runtime
+## Remaining Work (Next Phases)
+
+### Next Feature Block - DevOps / Runtime
 - Docker validation
 - CI/CD validation mode
 - pre-start validation wrapper
@@ -256,8 +269,8 @@ The CLI is stable for the completed backend roadmap blocks up through Log Exposu
 2. Codebase Analysis (DONE)
 3. Security (DONE)
 4. Log Exposure Protection (DONE)
-5. Encryption (NEXT)
-6. DevOps
+5. Encryption (DONE)
+6. DevOps (NEXT)
 7. Developer Experience
 8. Final UX polish
 
@@ -267,11 +280,11 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.5
+- version: v0.1.6
 - CLI stable
-- ready for encryption feature block
+- ready for DevOps / Runtime feature block
 
 ---
 
 ## Next Step
-Start **Encryption** feature block
+Start **DevOps / Runtime** feature block

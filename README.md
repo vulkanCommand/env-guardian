@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.5
+v0.1.6
 
 ---
 
@@ -23,6 +23,7 @@ Env Guardian helps you catch environment configuration issues early:
 - codebase env usage mismatches
 - secret leaks in env files, repository files, and git history
 - accidental logging of environment secrets
+- encrypted environment files
 
 ---
 
@@ -114,6 +115,21 @@ Checks:
 - log files containing secret-looking values
 - log files containing sensitive key/value pairs
 
+### Encryption
+
+```bash
+envguard encrypt
+envguard encrypt --file .env.prod --out .env.prod.enc
+envguard decrypt
+envguard decrypt --file .env.prod.enc --out .env.prod
+```
+
+Checks:
+- uses `ENVGUARD_KEY` for encryption and decryption
+- encrypts env files with AES-GCM
+- decrypts Env Guardian encrypted files
+- writes output to the selected file
+
 ### Scan Code
 
 ```bash
@@ -194,13 +210,14 @@ go test ./...
 
 ## Current Status
 
-v0.1.5 is complete.
+v0.1.6 is complete.
 
 Completed in this version:
-- source log exposure scanning
-- log file secret scanning
-- sensitive key/value detection in logs
-- `log-scan` command
+- `encrypt` command
+- `decrypt` command
+- key-based AES-GCM env file encryption
+- encrypted file format validation
+- encryption/decryption unit tests
 
 ---
 
@@ -217,12 +234,12 @@ Completed in this version:
 - team workflow commands
 - security scanning
 - log exposure protection
-
-### Next
 - encryption
 
-### Later
+### Next
 - DevOps/runtime validation
+
+### Later
 - CI/CD integration
 - GitHub Action
 - VS Code extension

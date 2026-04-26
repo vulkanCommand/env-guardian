@@ -8,6 +8,7 @@ import (
 
 	"github.com/vulkanCommand/env-guardian/internal/analyzer"
 	"github.com/vulkanCommand/env-guardian/internal/codebase"
+	"github.com/vulkanCommand/env-guardian/internal/encryption"
 	"github.com/vulkanCommand/env-guardian/internal/linter"
 	"github.com/vulkanCommand/env-guardian/internal/logscan"
 	"github.com/vulkanCommand/env-guardian/internal/models"
@@ -30,6 +31,8 @@ func printHelp() {
 	fmt.Println("  envguard help scan-code")
 	fmt.Println("  envguard help security")
 	fmt.Println("  envguard help log-scan")
+	fmt.Println("  envguard help encrypt")
+	fmt.Println("  envguard help decrypt")
 	fmt.Println("  envguard version")
 	fmt.Println("  envguard validate")
 	fmt.Println("  envguard validate --all")
@@ -48,6 +51,10 @@ func printHelp() {
 	fmt.Println("  envguard security --dir . --file .env.prod")
 	fmt.Println("  envguard log-scan")
 	fmt.Println("  envguard log-scan --dir .")
+	fmt.Println("  envguard encrypt")
+	fmt.Println("  envguard encrypt --file .env.prod --out .env.prod.enc")
+	fmt.Println("  envguard decrypt")
+	fmt.Println("  envguard decrypt --file .env.prod.enc --out .env.prod")
 	fmt.Println("  envguard generate-example")
 	fmt.Println("  envguard sync-example")
 }
@@ -156,6 +163,36 @@ func printLogScanHelp() {
 	fmt.Println("  --dir       Root directory to scan")
 }
 
+func printEncryptHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard encrypt")
+	fmt.Println("  envguard encrypt --file .env.prod --out .env.prod.enc")
+	fmt.Println("")
+	fmt.Println("Encryption:")
+	fmt.Println("  - reads the key from ENVGUARD_KEY")
+	fmt.Println("  - encrypts the target env file using AES-GCM")
+	fmt.Println("  - writes encrypted output to the output file")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --file      Env file to encrypt")
+	fmt.Println("  --out       Encrypted output file")
+}
+
+func printDecryptHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard decrypt")
+	fmt.Println("  envguard decrypt --file .env.prod.enc --out .env.prod")
+	fmt.Println("")
+	fmt.Println("Decryption:")
+	fmt.Println("  - reads the key from ENVGUARD_KEY")
+	fmt.Println("  - decrypts an Env Guardian encrypted file")
+	fmt.Println("  - writes plaintext output to the output file")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --file      Encrypted file to decrypt")
+	fmt.Println("  --out       Decrypted output file")
+}
+
 func hasHelpFlag(args []string) bool {
 	for _, arg := range args {
 		if arg == "--help" || arg == "-h" {
@@ -206,6 +243,12 @@ func handleHelpCommand(args []string) int {
 		return 0
 	case "log-scan":
 		printLogScanHelp()
+		return 0
+	case "encrypt":
+		printEncryptHelp()
+		return 0
+	case "decrypt":
+		printDecryptHelp()
 		return 0
 	default:
 		fmt.Printf("Error: unknown help topic: %s\n", args[0])
@@ -649,6 +692,97 @@ func getLogScanDir(args []string) (string, error) {
 	}
 
 	return dirPath, nil
+}
+
+func getCryptoPaths(args []string, defaultInputPath string, defaultOutputPath string) (string, string, error) {
+	inputPath := defaultInputPath
+	outputPath := defaultOutputPath
+	fileFlagSeen := false
+	outFlagSeen := false
+
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		if arg == "--file" {
+			if fileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --file")
+			}
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			next := args[i+1]
+			if strings.HasPrefix(next, "--") {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			inputPath = next
+			fileFlagSeen = true
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--file=") {
+			if fileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --file")
+			}
+
+			value := strings.TrimPrefix(arg, "--file=")
+			if value == "" {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			inputPath = value
+			fileFlagSeen = true
+			continue
+		}
+
+		if arg == "--out" {
+			if outFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --out")
+			}
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("missing value for --out")
+			}
+
+			next := args[i+1]
+			if strings.HasPrefix(next, "--") {
+				return "", "", fmt.Errorf("missing value for --out")
+			}
+
+			outputPath = next
+			outFlagSeen = true
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--out=") {
+			if outFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --out")
+			}
+
+			value := strings.TrimPrefix(arg, "--out=")
+			if value == "" {
+				return "", "", fmt.Errorf("missing value for --out")
+			}
+
+			outputPath = value
+			outFlagSeen = true
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--") {
+			return "", "", fmt.Errorf("unknown flag: %s", arg)
+		}
+
+		return "", "", fmt.Errorf("unexpected argument: %s", arg)
+	}
+
+	if inputPath == outputPath {
+		return "", "", fmt.Errorf("--file and --out must be different")
+	}
+
+	return inputPath, outputPath, nil
 }
 
 func runValidate(envPath string, examplePath string) int {
@@ -1098,6 +1232,38 @@ func runLogScan(dirPath string) int {
 	return 1
 }
 
+func runEncrypt(inputPath string, outputPath string) int {
+	err := encryption.EncryptFile(inputPath, outputPath, os.Getenv("ENVGUARD_KEY"))
+	if err != nil {
+		fmt.Printf("Error: could not encrypt %s: %v\n", inputPath, err)
+		return 1
+	}
+
+	fmt.Println("Env Encryption Report")
+	fmt.Println("---------------------")
+	fmt.Printf("Input file: %s\n", inputPath)
+	fmt.Printf("Output file: %s\n\n", outputPath)
+	fmt.Println("[PASS] Env file encrypted")
+
+	return 0
+}
+
+func runDecrypt(inputPath string, outputPath string) int {
+	err := encryption.DecryptFile(inputPath, outputPath, os.Getenv("ENVGUARD_KEY"))
+	if err != nil {
+		fmt.Printf("Error: could not decrypt %s: %v\n", inputPath, err)
+		return 1
+	}
+
+	fmt.Println("Env Decryption Report")
+	fmt.Println("---------------------")
+	fmt.Printf("Input file: %s\n", inputPath)
+	fmt.Printf("Output file: %s\n\n", outputPath)
+	fmt.Println("[PASS] Env file decrypted")
+
+	return 0
+}
+
 func runScanCode(dirPath string, envPath string) int {
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
@@ -1358,6 +1524,28 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(runLogScan(dirPath))
+	case "encrypt":
+		if hasHelpFlag(args[1:]) {
+			printEncryptHelp()
+			os.Exit(0)
+		}
+		inputPath, outputPath, err := getCryptoPaths(args[1:], ".env", ".env.enc")
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runEncrypt(inputPath, outputPath))
+	case "decrypt":
+		if hasHelpFlag(args[1:]) {
+			printDecryptHelp()
+			os.Exit(0)
+		}
+		inputPath, outputPath, err := getCryptoPaths(args[1:], ".env.enc", ".env.decrypted")
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runDecrypt(inputPath, outputPath))
 	case "generate-example":
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
