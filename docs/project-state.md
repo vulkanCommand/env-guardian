@@ -6,16 +6,16 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and d
 ---
 
 ## Current Version
-v0.1.7
+v0.1.8
 
 ---
 
 ## Current Status
-## v0.1.7 COMPLETE
+## v0.1.8 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, and DevOps/runtime validation.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, and GitHub Actions automation.
 
-The CLI is stable for the completed backend roadmap blocks up through DevOps / Runtime.
+The CLI is stable for the completed backend roadmap blocks up through Developer Experience JSON and CI automation.
 
 ---
 
@@ -133,6 +133,23 @@ The CLI is stable for the completed backend roadmap blocks up through DevOps / R
 - validates Dockerfile `ARG`, `ENV`, `$KEY`, and `${KEY}` references against an env file
 - runs fail-fast CI checks for linting, required keys, duplicates, and typed values
 - validates env configuration before starting an application command
+
+---
+
+### Developer Experience
+- `--json` output for report-style commands
+- supported by:
+  - `envguard validate --json`
+  - `envguard validate --all --json`
+  - `envguard lint --json`
+  - `envguard analyze --json`
+  - `envguard doctor --json`
+  - `envguard scan-code --json`
+  - `envguard security --json`
+  - `envguard log-scan --json`
+  - `envguard docker --json`
+  - `envguard ci --json`
+- `.github/workflows/envguard.yml` runs Go tests, builds the CLI, and runs Env Guardian checks in GitHub Actions
 
 ---
 
@@ -267,14 +284,14 @@ The CLI is stable for the completed backend roadmap blocks up through DevOps / R
 - Docker validation
 - CI/CD validation mode
 - pre-start validation wrapper
+- JSON output
+- GitHub Action workflow
 
 ---
 
 ## Remaining Work (Next Phases)
 
-### Next Feature Block - Developer Experience
-- JSON output
-- GitHub Action
+### Next Feature Block - Developer Experience Polish
 - VS Code extension
 
 ---
@@ -286,7 +303,7 @@ The CLI is stable for the completed backend roadmap blocks up through DevOps / R
 4. Log Exposure Protection (DONE)
 5. Encryption (DONE)
 6. DevOps (DONE)
-7. Developer Experience (NEXT)
+7. Developer Experience (PARTIAL DONE)
 8. Final UX polish
 
 No jumping ahead.
@@ -295,11 +312,11 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.7
+- version: v0.1.8
 - CLI stable
-- ready for Developer Experience feature block
+- ready for Developer Experience polish
 
 ---
 
 ## Next Step
-Start **Developer Experience** feature block
+Continue **Developer Experience** with VS Code extension planning/implementation

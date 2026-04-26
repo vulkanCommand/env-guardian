@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.7
+v0.1.8
 
 ---
 
@@ -25,6 +25,7 @@ Env Guardian helps you catch environment configuration issues early:
 - accidental logging of environment secrets
 - encrypted environment files
 - Docker and runtime environment checks
+- JSON output for automation and CI
 
 ---
 
@@ -38,6 +39,7 @@ envguard validate --all
 envguard validate --file .env.prod
 envguard validate --example .env.example.prod
 envguard validate --file .env.prod --example .env.example.prod
+envguard validate --json
 ```
 
 Checks:
@@ -56,6 +58,7 @@ Checks:
 ```bash
 envguard lint
 envguard lint --file .env.prod
+envguard lint --json
 ```
 
 Checks:
@@ -69,6 +72,7 @@ Checks:
 ```bash
 envguard analyze
 envguard analyze --file .env.prod
+envguard analyze --json
 ```
 
 Outputs:
@@ -81,6 +85,7 @@ Outputs:
 ```bash
 envguard doctor
 envguard doctor --file .env.prod --example .env.example.prod
+envguard doctor --json
 ```
 
 Checks:
@@ -96,6 +101,7 @@ envguard security
 envguard security --dir .
 envguard security --file .env.prod
 envguard security --dir . --file .env.prod
+envguard security --json
 ```
 
 Checks:
@@ -109,6 +115,7 @@ Checks:
 ```bash
 envguard log-scan
 envguard log-scan --dir .
+envguard log-scan --json
 ```
 
 Checks:
@@ -138,6 +145,7 @@ envguard docker
 envguard docker --dockerfile Dockerfile --file .env.prod
 envguard ci
 envguard ci --file .env.prod --example .env.example.prod
+envguard ci --json
 envguard run -- go run ./cmd/envguard
 envguard run --file .env.prod --example .env.example.prod -- ./app
 ```
@@ -153,6 +161,7 @@ Checks:
 envguard scan-code
 envguard scan-code --dir .
 envguard scan-code --dir . --file .env.prod
+envguard scan-code --json
 ```
 
 Checks:
@@ -172,6 +181,27 @@ envguard sync-example
 Checks:
 - generate `.env.example` from `.env`
 - sync missing keys from `.env` into `.env.example`
+
+---
+
+## Developer Experience
+
+Machine-readable output:
+
+```bash
+envguard validate --json
+envguard lint --json
+envguard analyze --json
+envguard doctor --json
+envguard scan-code --json
+envguard security --json
+envguard log-scan --json
+envguard docker --json
+envguard ci --json
+```
+
+GitHub Actions:
+- `.github/workflows/envguard.yml` runs tests, builds the CLI, prepares `.env` from `.env.example`, and runs CI/security/log exposure checks with JSON output.
 
 ---
 
@@ -227,13 +257,12 @@ go test ./...
 
 ## Current Status
 
-v0.1.7 is complete.
+v0.1.8 is complete.
 
 Completed in this version:
-- Dockerfile environment validation
-- CI/CD validation mode
-- pre-start validation wrapper
-- runtime command tests
+- JSON output for report-style commands
+- `--json` help and strict duplicate flag handling
+- GitHub Actions workflow for automated project checks
 
 ---
 
@@ -252,13 +281,14 @@ Completed in this version:
 - log exposure protection
 - encryption
 - DevOps/runtime validation
+- Developer Experience JSON output
+- GitHub Action
 
 ### Next
-- JSON output
+- VS Code extension
 
 ### Later
-- GitHub Action
-- VS Code extension
+- Final UX polish
 
 ---
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -64,6 +65,7 @@ func printHelp() {
 	fmt.Println("  envguard docker --dockerfile Dockerfile --file .env.prod")
 	fmt.Println("  envguard ci")
 	fmt.Println("  envguard ci --file .env.prod --example .env.example.prod")
+	fmt.Println("  envguard ci --json")
 	fmt.Println("  envguard run -- go run ./cmd/envguard")
 	fmt.Println("  envguard generate-example")
 	fmt.Println("  envguard sync-example")
@@ -86,6 +88,7 @@ func printValidateHelp() {
 	fmt.Println("  --all       Validate .env.dev, .env.prod, and .env.test")
 	fmt.Println("  --file      Target env file to validate")
 	fmt.Println("  --example   Example env file to compare against")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printLintHelp() {
@@ -95,6 +98,7 @@ func printLintHelp() {
 	fmt.Println("")
 	fmt.Println("Flags:")
 	fmt.Println("  --file      Target env file to lint")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printAnalyzeHelp() {
@@ -104,6 +108,7 @@ func printAnalyzeHelp() {
 	fmt.Println("")
 	fmt.Println("Flags:")
 	fmt.Println("  --file      Target env file to analyze")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printDoctorHelp() {
@@ -114,6 +119,7 @@ func printDoctorHelp() {
 	fmt.Println("Flags:")
 	fmt.Println("  --file      Target env file to inspect")
 	fmt.Println("  --example   Example env file to compare against")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printScanCodeHelp() {
@@ -139,6 +145,7 @@ func printScanCodeHelp() {
 	fmt.Println("Flags:")
 	fmt.Println("  --dir       Root directory to scan")
 	fmt.Println("  --file      Env file to compare against")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printSecurityHelp() {
@@ -157,6 +164,7 @@ func printSecurityHelp() {
 	fmt.Println("Flags:")
 	fmt.Println("  --dir       Root directory to scan")
 	fmt.Println("  --file      Env file to inspect")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printLogScanHelp() {
@@ -171,6 +179,7 @@ func printLogScanHelp() {
 	fmt.Println("")
 	fmt.Println("Flags:")
 	fmt.Println("  --dir       Root directory to scan")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printEncryptHelp() {
@@ -216,6 +225,7 @@ func printDockerHelp() {
 	fmt.Println("Flags:")
 	fmt.Println("  --dockerfile   Dockerfile path to inspect")
 	fmt.Println("  --file         Env file to compare against")
+	fmt.Println("  --json         Print machine-readable JSON output")
 }
 
 func printCIHelp() {
@@ -232,6 +242,7 @@ func printCIHelp() {
 	fmt.Println("Flags:")
 	fmt.Println("  --file      Target env file to validate")
 	fmt.Println("  --example   Example env file to compare against")
+	fmt.Println("  --json      Print machine-readable JSON output")
 }
 
 func printRunHelp() {
@@ -265,6 +276,25 @@ func hasAllFlag(args []string) bool {
 		}
 	}
 	return false
+}
+
+func extractJSONFlag(args []string) ([]string, bool, error) {
+	filtered := []string{}
+	jsonSeen := false
+
+	for _, arg := range args {
+		if arg == "--json" {
+			if jsonSeen {
+				return nil, false, fmt.Errorf("duplicate flag: --json")
+			}
+			jsonSeen = true
+			continue
+		}
+
+		filtered = append(filtered, arg)
+	}
+
+	return filtered, jsonSeen, nil
 }
 
 func handleHelpCommand(args []string) int {
@@ -963,6 +993,325 @@ func getRunOptions(args []string) (string, string, []string, error) {
 	return envPath, examplePath, commandArgs, nil
 }
 
+type jsonReport struct {
+	Command       string         `json:"command"`
+	Status        string         `json:"status"`
+	TargetFile    string         `json:"target_file,omitempty"`
+	ExampleFile   string         `json:"example_file,omitempty"`
+	RootDirectory string         `json:"root_directory,omitempty"`
+	Dockerfile    string         `json:"dockerfile,omitempty"`
+	Errors        []string       `json:"errors"`
+	Warnings      []string       `json:"warnings"`
+	Summary       map[string]int `json:"summary"`
+	Details       any            `json:"details,omitempty"`
+}
+
+func newJSONReport(command string) jsonReport {
+	return jsonReport{
+		Command:  command,
+		Status:   "pass",
+		Errors:   []string{},
+		Warnings: []string{},
+		Summary:  map[string]int{},
+	}
+}
+
+func printJSONReport(report jsonReport) {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	_ = encoder.Encode(report)
+}
+
+func reportStatus(errorCount int, warningCount int) string {
+	if errorCount > 0 {
+		return "fail"
+	}
+	if warningCount > 0 {
+		return "warning"
+	}
+	return "pass"
+}
+
+func nonNilStrings(values []string) []string {
+	if values == nil {
+		return []string{}
+	}
+	return values
+}
+
+func loadOptionalTypeSchema() (map[string]string, error) {
+	schema := map[string]string{}
+
+	loadedSchema, err := parser.LoadTypeSchema("examples/.env.types")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return schema, nil
+		}
+		return schema, err
+	}
+
+	return loadedSchema, nil
+}
+
+func runValidateJSON(envPath string, examplePath string) int {
+	report := newJSONReport("validate")
+	report.TargetFile = envPath
+	report.ExampleFile = examplePath
+
+	schema, err := loadOptionalTypeSchema()
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read type schema file: %v", err))
+		report.Summary["errors"] = 1
+		report.Summary["warnings"] = 0
+		printJSONReport(report)
+		return 1
+	}
+
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", envPath))
+		report.Summary["errors"] = 1
+		report.Summary["warnings"] = 0
+		printJSONReport(report)
+		return 1
+	}
+
+	exampleFile, err := parser.ParseEnvFile(examplePath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", examplePath))
+		report.Summary["errors"] = 1
+		report.Summary["warnings"] = 0
+		printJSONReport(report)
+		return 1
+	}
+
+	result := validator.ValidateEnv(envFile, exampleFile, schema)
+
+	sort.Strings(result.MissingKeys)
+	sort.Strings(result.DuplicateKeys)
+	sort.Strings(result.UnusedKeys)
+	sort.Strings(result.InvalidTypeValues)
+
+	for _, key := range result.MissingKeys {
+		report.Errors = append(report.Errors, fmt.Sprintf("Missing key: %s", key))
+	}
+	for _, key := range result.DuplicateKeys {
+		report.Errors = append(report.Errors, fmt.Sprintf("Duplicate key: %s", key))
+	}
+	for _, issue := range result.InvalidTypeValues {
+		report.Errors = append(report.Errors, fmt.Sprintf("Invalid type: %s", issue))
+	}
+	for _, key := range result.UnusedKeys {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("Unused key: %s", key))
+	}
+
+	errorCount := len(report.Errors)
+	warningCount := len(report.Warnings)
+	report.Status = reportStatus(errorCount, warningCount)
+	report.Summary["errors"] = errorCount
+	report.Summary["warnings"] = warningCount
+	report.Details = map[string]any{
+		"missing_keys":        result.MissingKeys,
+		"duplicate_keys":      result.DuplicateKeys,
+		"unused_keys":         result.UnusedKeys,
+		"invalid_type_values": result.InvalidTypeValues,
+		"type_schema_loaded":  len(schema) > 0,
+	}
+
+	printJSONReport(report)
+
+	if errorCount > 0 {
+		return 1
+	}
+	return 0
+}
+
+func runValidateAllJSON() int {
+	report := newJSONReport("validate")
+	report.Summary["errors"] = 0
+	report.Summary["warnings"] = 0
+
+	schema, err := loadOptionalTypeSchema()
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read type schema file: %v", err))
+		report.Summary["errors"] = 1
+		report.Summary["warnings"] = 0
+		printJSONReport(report)
+		return 1
+	}
+
+	envTargets := []struct {
+		envPath     string
+		examplePath string
+		label       string
+	}{
+		{envPath: ".env.dev", examplePath: ".env.example.dev", label: "dev"},
+		{envPath: ".env.prod", examplePath: ".env.example.prod", label: "prod"},
+		{envPath: ".env.test", examplePath: ".env.example.test", label: "test"},
+	}
+
+	type environmentReport struct {
+		Label       string   `json:"label"`
+		TargetFile  string   `json:"target_file"`
+		ExampleFile string   `json:"example_file"`
+		Status      string   `json:"status"`
+		Skipped     bool     `json:"skipped"`
+		Errors      []string `json:"errors"`
+		Warnings    []string `json:"warnings"`
+	}
+
+	environments := []environmentReport{}
+	envFiles := make(map[string]*models.EnvFile)
+	validationMissing := make(map[string]map[string]bool)
+	totalErrors := 0
+	totalWarnings := 0
+
+	for _, target := range envTargets {
+		environment := environmentReport{
+			Label:       target.label,
+			TargetFile:  target.envPath,
+			ExampleFile: target.examplePath,
+			Status:      "pass",
+			Errors:      []string{},
+			Warnings:    []string{},
+		}
+
+		if _, err := os.Stat(target.envPath); err != nil {
+			if os.IsNotExist(err) {
+				environment.Skipped = true
+				environment.Status = "skipped"
+			} else {
+				message := fmt.Sprintf("could not access %s", target.envPath)
+				environment.Status = "fail"
+				environment.Errors = append(environment.Errors, message)
+				report.Errors = append(report.Errors, fmt.Sprintf("%s: %s", target.label, message))
+				totalErrors++
+			}
+			environments = append(environments, environment)
+			continue
+		}
+
+		if _, err := os.Stat(target.examplePath); err != nil {
+			if os.IsNotExist(err) {
+				environment.Skipped = true
+				environment.Status = "skipped"
+			} else {
+				message := fmt.Sprintf("could not access %s", target.examplePath)
+				environment.Status = "fail"
+				environment.Errors = append(environment.Errors, message)
+				report.Errors = append(report.Errors, fmt.Sprintf("%s: %s", target.label, message))
+				totalErrors++
+			}
+			environments = append(environments, environment)
+			continue
+		}
+
+		envFile, err := parser.ParseEnvFile(target.envPath)
+		if err != nil {
+			message := fmt.Sprintf("could not read %s", target.envPath)
+			environment.Status = "fail"
+			environment.Errors = append(environment.Errors, message)
+			report.Errors = append(report.Errors, fmt.Sprintf("%s: %s", target.label, message))
+			totalErrors++
+			environments = append(environments, environment)
+			continue
+		}
+
+		exampleFile, err := parser.ParseEnvFile(target.examplePath)
+		if err != nil {
+			message := fmt.Sprintf("could not read %s", target.examplePath)
+			environment.Status = "fail"
+			environment.Errors = append(environment.Errors, message)
+			report.Errors = append(report.Errors, fmt.Sprintf("%s: %s", target.label, message))
+			totalErrors++
+			environments = append(environments, environment)
+			continue
+		}
+
+		envFiles[target.label] = envFile
+		result := validator.ValidateEnv(envFile, exampleFile, schema)
+
+		sort.Strings(result.MissingKeys)
+		sort.Strings(result.DuplicateKeys)
+		sort.Strings(result.UnusedKeys)
+		sort.Strings(result.InvalidTypeValues)
+
+		missingSet := make(map[string]bool)
+		for _, key := range result.MissingKeys {
+			message := fmt.Sprintf("Missing key: %s", key)
+			environment.Errors = append(environment.Errors, message)
+			report.Errors = append(report.Errors, fmt.Sprintf("%s: %s", target.label, message))
+			missingSet[key] = true
+		}
+		validationMissing[target.label] = missingSet
+
+		for _, key := range result.DuplicateKeys {
+			message := fmt.Sprintf("Duplicate key: %s", key)
+			environment.Errors = append(environment.Errors, message)
+			report.Errors = append(report.Errors, fmt.Sprintf("%s: %s", target.label, message))
+		}
+		for _, issue := range result.InvalidTypeValues {
+			message := fmt.Sprintf("Invalid type: %s", issue)
+			environment.Errors = append(environment.Errors, message)
+			report.Errors = append(report.Errors, fmt.Sprintf("%s: %s", target.label, message))
+		}
+		for _, key := range result.UnusedKeys {
+			message := fmt.Sprintf("Unused key: %s", key)
+			environment.Warnings = append(environment.Warnings, message)
+			report.Warnings = append(report.Warnings, fmt.Sprintf("%s: %s", target.label, message))
+		}
+
+		totalErrors += len(environment.Errors)
+		totalWarnings += len(environment.Warnings)
+		environment.Status = reportStatus(len(environment.Errors), len(environment.Warnings))
+		environments = append(environments, environment)
+	}
+
+	consistencyWarnings := []string{}
+	if len(envFiles) > 1 {
+		inconsistencies := validator.CompareEnvs(envFiles)
+		envNames := make([]string, 0, len(inconsistencies))
+		for env := range inconsistencies {
+			envNames = append(envNames, env)
+		}
+		sort.Strings(envNames)
+
+		for _, env := range envNames {
+			missingKeys := inconsistencies[env]
+			sort.Strings(missingKeys)
+			for _, key := range missingKeys {
+				if validationMissing[env][key] {
+					continue
+				}
+				consistencyWarnings = append(consistencyWarnings, fmt.Sprintf("%s missing key across environments: %s", env, key))
+			}
+		}
+	}
+
+	report.Warnings = append(report.Warnings, consistencyWarnings...)
+	totalWarnings += len(consistencyWarnings)
+	report.Status = reportStatus(totalErrors, totalWarnings)
+	report.Summary["errors"] = totalErrors
+	report.Summary["warnings"] = totalWarnings
+	report.Details = map[string]any{
+		"mode":                 "all",
+		"environments":         environments,
+		"consistency_warnings": consistencyWarnings,
+		"type_schema_loaded":   len(schema) > 0,
+	}
+
+	printJSONReport(report)
+
+	if totalErrors > 0 {
+		return 1
+	}
+	return 0
+}
+
 func runValidate(envPath string, examplePath string) int {
 	schema := map[string]string{}
 
@@ -1410,6 +1759,426 @@ func runLogScan(dirPath string) int {
 	return 1
 }
 
+func runLintJSON(envPath string) int {
+	report := newJSONReport("lint")
+	report.TargetFile = envPath
+
+	result, err := linter.Run(envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", envPath))
+		report.Summary["lint_issues"] = 1
+		printJSONReport(report)
+		return 1
+	}
+
+	result.InvalidLines = nonNilStrings(result.InvalidLines)
+	sort.Strings(result.InvalidLines)
+	report.Errors = append(report.Errors, result.InvalidLines...)
+	report.Status = reportStatus(len(report.Errors), 0)
+	report.Summary["lint_issues"] = len(result.InvalidLines)
+	report.Details = map[string]any{
+		"invalid_lines": result.InvalidLines,
+	}
+
+	printJSONReport(report)
+
+	if len(result.InvalidLines) > 0 {
+		return 1
+	}
+	return 0
+}
+
+func runAnalyzeJSON(envPath string) int {
+	report := newJSONReport("analyze")
+	report.TargetFile = envPath
+
+	result, err := analyzer.Run(envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", envPath))
+		report.Summary["errors"] = 1
+		report.Summary["warnings"] = 0
+		printJSONReport(report)
+		return 1
+	}
+
+	result.EmptyValues = nonNilStrings(result.EmptyValues)
+	result.PotentialSecrets = nonNilStrings(result.PotentialSecrets)
+	sort.Strings(result.EmptyValues)
+	sort.Strings(result.PotentialSecrets)
+
+	for _, key := range result.EmptyValues {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("Empty value: %s", key))
+	}
+	for _, key := range result.PotentialSecrets {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("Potential sensitive key: %s", key))
+	}
+
+	report.Status = reportStatus(0, len(report.Warnings))
+	report.Summary["total_keys"] = result.TotalKeys
+	report.Summary["empty_values"] = len(result.EmptyValues)
+	report.Summary["potential_sensitive_keys"] = len(result.PotentialSecrets)
+	report.Details = map[string]any{
+		"empty_values":      result.EmptyValues,
+		"potential_secrets": result.PotentialSecrets,
+	}
+
+	printJSONReport(report)
+	return 0
+}
+
+func runDoctorJSON(envPath string, examplePath string) int {
+	report := newJSONReport("doctor")
+	report.TargetFile = envPath
+	report.ExampleFile = examplePath
+
+	envExists := true
+	exampleExists := true
+	envTracked := security.IsGitTracked(".", envPath)
+	missingInEnv := []string{}
+
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		envExists = false
+	}
+
+	exampleFile, err := parser.ParseEnvFile(examplePath)
+	if err != nil {
+		exampleExists = false
+	}
+
+	if envExists && exampleExists {
+		for key := range exampleFile.Values {
+			if _, exists := envFile.Values[key]; !exists {
+				missingInEnv = append(missingInEnv, key)
+			}
+		}
+		sort.Strings(missingInEnv)
+	}
+
+	targetFileIssues := 0
+	exampleFileIssues := 0
+	securityWarnings := 0
+
+	if !envExists {
+		targetFileIssues = 1
+		report.Errors = append(report.Errors, fmt.Sprintf("%s file missing", envPath))
+	}
+
+	if !exampleExists {
+		exampleFileIssues = 1
+		report.Warnings = append(report.Warnings, fmt.Sprintf("%s file missing", examplePath))
+	}
+
+	for _, key := range missingInEnv {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("Missing key in %s: %s", envPath, key))
+	}
+
+	if envTracked {
+		securityWarnings = 1
+		report.Warnings = append(report.Warnings, fmt.Sprintf("%s appears to be tracked by git", envPath))
+	}
+
+	exitCode := 0
+	if len(missingInEnv) > 0 || !envExists {
+		exitCode = 1
+	}
+
+	if exitCode != 0 {
+		report.Status = "fail"
+	} else {
+		report.Status = reportStatus(0, len(report.Warnings))
+	}
+
+	report.Summary["target_file_issues"] = targetFileIssues
+	report.Summary["example_file_issues"] = exampleFileIssues
+	report.Summary["missing_keys"] = len(missingInEnv)
+	report.Summary["security_warnings"] = securityWarnings
+	report.Details = map[string]any{
+		"target_file_exists":  envExists,
+		"example_file_exists": exampleExists,
+		"missing_in_env":      missingInEnv,
+		"env_file_tracked":    envTracked,
+	}
+
+	printJSONReport(report)
+	return exitCode
+}
+
+func runSecurityJSON(dirPath string, envPath string) int {
+	report := newJSONReport("security")
+	report.RootDirectory = dirPath
+	report.TargetFile = envPath
+
+	result, err := security.Run(dirPath, envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not run security checks: %v", err))
+		report.Summary["secret_findings"] = 1
+		report.Summary["warnings"] = 0
+		printJSONReport(report)
+		return 1
+	}
+
+	secretFindingCount := 0
+	warningCount := 0
+
+	if result.EnvFileTracked {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("%s appears to be tracked by git", envPath))
+		warningCount++
+	}
+
+	for _, finding := range result.EnvFindings {
+		report.Errors = append(report.Errors, fmt.Sprintf("Env secret: %s (%s)", finding.Location, finding.Kind))
+		secretFindingCount++
+	}
+	for _, finding := range result.RepositoryFindings {
+		report.Errors = append(report.Errors, fmt.Sprintf("Repository secret: %s (%s)", finding.Location, finding.Kind))
+		secretFindingCount++
+	}
+	for _, finding := range result.HistoryFindings {
+		report.Errors = append(report.Errors, fmt.Sprintf("Git history secret: %s (%s)", finding.Location, finding.Kind))
+		secretFindingCount++
+	}
+
+	if !result.HistoryScanned {
+		report.Warnings = append(report.Warnings, "Git history scan skipped")
+		warningCount++
+	}
+
+	report.Status = reportStatus(secretFindingCount, warningCount)
+	report.Summary["secret_findings"] = secretFindingCount
+	report.Summary["warnings"] = warningCount
+	report.Details = map[string]any{
+		"env_findings":        result.EnvFindings,
+		"repository_findings": result.RepositoryFindings,
+		"history_findings":    result.HistoryFindings,
+		"env_file_tracked":    result.EnvFileTracked,
+		"history_scanned":     result.HistoryScanned,
+	}
+
+	printJSONReport(report)
+
+	if secretFindingCount > 0 {
+		return 1
+	}
+	return 0
+}
+
+func runLogScanJSON(dirPath string) int {
+	report := newJSONReport("log-scan")
+	report.RootDirectory = dirPath
+
+	result, err := logscan.Run(dirPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not scan logs in %s", dirPath))
+		report.Summary["log_exposure_findings"] = 1
+		printJSONReport(report)
+		return 1
+	}
+
+	sort.Slice(result.Findings, func(i, j int) bool {
+		if result.Findings[i].Location == result.Findings[j].Location {
+			return result.Findings[i].Kind < result.Findings[j].Kind
+		}
+		return result.Findings[i].Location < result.Findings[j].Location
+	})
+
+	for _, finding := range result.Findings {
+		report.Errors = append(report.Errors, fmt.Sprintf("Log exposure: %s (%s)", finding.Location, finding.Kind))
+	}
+
+	report.Status = reportStatus(len(result.Findings), 0)
+	report.Summary["scanned_files"] = result.ScannedFilesCount
+	report.Summary["log_exposure_findings"] = len(result.Findings)
+	report.Details = map[string]any{
+		"findings": result.Findings,
+	}
+
+	printJSONReport(report)
+
+	if len(result.Findings) > 0 {
+		return 1
+	}
+	return 0
+}
+
+func runDockerJSON(dockerfilePath string, envPath string) int {
+	report := newJSONReport("docker")
+	report.Dockerfile = dockerfilePath
+	report.TargetFile = envPath
+
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", envPath))
+		report.Summary["missing_docker_keys"] = 1
+		printJSONReport(report)
+		return 1
+	}
+
+	result, err := runtimecheck.ValidateDockerfile(dockerfilePath, envFile.Values)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", dockerfilePath))
+		report.Summary["missing_docker_keys"] = 1
+		printJSONReport(report)
+		return 1
+	}
+
+	for _, key := range result.MissingKeys {
+		report.Errors = append(report.Errors, fmt.Sprintf("Missing Docker env key: %s", key))
+	}
+
+	report.Status = reportStatus(len(result.MissingKeys), 0)
+	report.Summary["referenced_keys"] = len(result.ReferencedKeys)
+	report.Summary["missing_docker_keys"] = len(result.MissingKeys)
+	report.Details = map[string]any{
+		"referenced_keys": result.ReferencedKeys,
+		"missing_keys":    result.MissingKeys,
+	}
+
+	printJSONReport(report)
+
+	if len(result.MissingKeys) > 0 {
+		return 1
+	}
+	return 0
+}
+
+func runCIJSON(envPath string, examplePath string) int {
+	report := newJSONReport("ci")
+	report.TargetFile = envPath
+	report.ExampleFile = examplePath
+
+	lintResult, err := linter.Run(envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not lint %s", envPath))
+		report.Summary["ci_errors"] = 1
+		printJSONReport(report)
+		return 1
+	}
+
+	lintResult.InvalidLines = nonNilStrings(lintResult.InvalidLines)
+	sort.Strings(lintResult.InvalidLines)
+	for _, issue := range lintResult.InvalidLines {
+		report.Errors = append(report.Errors, fmt.Sprintf("Lint: %s", issue))
+	}
+
+	schema, err := loadOptionalTypeSchema()
+	if err != nil {
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read type schema file: %v", err))
+	}
+
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", envPath))
+		report.Summary["ci_errors"] = len(report.Errors)
+		printJSONReport(report)
+		return 1
+	}
+
+	exampleFile, err := parser.ParseEnvFile(examplePath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", examplePath))
+		report.Summary["ci_errors"] = len(report.Errors)
+		printJSONReport(report)
+		return 1
+	}
+
+	result := validator.ValidateEnv(envFile, exampleFile, schema)
+
+	sort.Strings(result.MissingKeys)
+	sort.Strings(result.DuplicateKeys)
+	sort.Strings(result.InvalidTypeValues)
+
+	for _, key := range result.MissingKeys {
+		report.Errors = append(report.Errors, fmt.Sprintf("Missing key: %s", key))
+	}
+	for _, key := range result.DuplicateKeys {
+		report.Errors = append(report.Errors, fmt.Sprintf("Duplicate key: %s", key))
+	}
+	for _, issue := range result.InvalidTypeValues {
+		report.Errors = append(report.Errors, fmt.Sprintf("Invalid type: %s", issue))
+	}
+
+	report.Status = reportStatus(len(report.Errors), 0)
+	report.Summary["ci_errors"] = len(report.Errors)
+	report.Details = map[string]any{
+		"lint_issues":         lintResult.InvalidLines,
+		"missing_keys":        result.MissingKeys,
+		"duplicate_keys":      result.DuplicateKeys,
+		"invalid_type_values": result.InvalidTypeValues,
+		"type_schema_loaded":  len(schema) > 0,
+	}
+
+	printJSONReport(report)
+
+	if len(report.Errors) > 0 {
+		return 1
+	}
+	return 0
+}
+
+func runScanCodeJSON(dirPath string, envPath string) int {
+	report := newJSONReport("scan-code")
+	report.RootDirectory = dirPath
+	report.TargetFile = envPath
+
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not read %s", envPath))
+		report.Summary["missing_env_keys"] = 1
+		printJSONReport(report)
+		return 1
+	}
+
+	result, err := codebase.Run(dirPath, envFile.Values)
+	if err != nil {
+		report.Status = "fail"
+		report.Errors = append(report.Errors, fmt.Sprintf("could not scan codebase in %s", dirPath))
+		report.Summary["missing_env_keys"] = 1
+		printJSONReport(report)
+		return 1
+	}
+
+	for _, mismatch := range result.NamingMismatches {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("Code uses %s but env file contains %s", mismatch.CodeKey, mismatch.EnvKey))
+	}
+	for _, key := range result.MissingInEnv {
+		report.Errors = append(report.Errors, fmt.Sprintf("Missing env key for code usage: %s", key))
+	}
+	for _, key := range result.UnusedInEnv {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("Unused env key in codebase: %s", key))
+	}
+
+	report.Status = reportStatus(len(report.Errors), len(report.Warnings))
+	report.Summary["scanned_files"] = result.ScannedFilesCount
+	report.Summary["detected_env_usages"] = len(result.UsedKeys)
+	report.Summary["naming_mismatches"] = len(result.NamingMismatches)
+	report.Summary["missing_env_keys"] = len(result.MissingInEnv)
+	report.Summary["unused_env_keys"] = len(result.UnusedInEnv)
+	report.Details = map[string]any{
+		"used_keys":         result.UsedKeys,
+		"missing_in_env":    result.MissingInEnv,
+		"unused_in_env":     result.UnusedInEnv,
+		"naming_mismatches": result.NamingMismatches,
+	}
+
+	printJSONReport(report)
+
+	if len(result.MissingInEnv) > 0 {
+		return 1
+	}
+	return 0
+}
+
 func runEncrypt(inputPath string, outputPath string) int {
 	err := encryption.EncryptFile(inputPath, outputPath, os.Getenv("ENVGUARD_KEY"))
 	if err != nil {
@@ -1758,8 +2527,13 @@ func main() {
 			printValidateHelp()
 			os.Exit(0)
 		}
-		if hasAllFlag(args[1:]) {
-			envPath, examplePath, err := getValidatePaths(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if hasAllFlag(commandArgs) {
+			envPath, examplePath, err := getValidatePaths(commandArgs)
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
 				os.Exit(1)
@@ -1768,12 +2542,18 @@ func main() {
 				fmt.Println("Error: --all cannot be used with --file or --example")
 				os.Exit(1)
 			}
+			if jsonOutput {
+				os.Exit(runValidateAllJSON())
+			}
 			os.Exit(runValidateAll())
 		}
-		envPath, examplePath, err := getValidatePaths(args[1:])
+		envPath, examplePath, err := getValidatePaths(commandArgs)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runValidateJSON(envPath, examplePath))
 		}
 		os.Exit(runValidate(envPath, examplePath))
 	case "lint":
@@ -1781,10 +2561,18 @@ func main() {
 			printLintHelp()
 			os.Exit(0)
 		}
-		envPath, err := getLintFilePath(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		envPath, err := getLintFilePath(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runLintJSON(envPath))
 		}
 		os.Exit(runLint(envPath))
 	case "analyze":
@@ -1792,10 +2580,18 @@ func main() {
 			printAnalyzeHelp()
 			os.Exit(0)
 		}
-		envPath, err := getAnalyzeFilePath(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		envPath, err := getAnalyzeFilePath(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runAnalyzeJSON(envPath))
 		}
 		os.Exit(runAnalyze(envPath))
 	case "doctor":
@@ -1803,10 +2599,18 @@ func main() {
 			printDoctorHelp()
 			os.Exit(0)
 		}
-		envPath, examplePath, err := getDoctorPaths(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		envPath, examplePath, err := getDoctorPaths(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runDoctorJSON(envPath, examplePath))
 		}
 		os.Exit(runDoctor(envPath, examplePath))
 	case "scan-code":
@@ -1814,10 +2618,18 @@ func main() {
 			printScanCodeHelp()
 			os.Exit(0)
 		}
-		dirPath, envPath, err := getScanCodeOptions(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		dirPath, envPath, err := getScanCodeOptions(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runScanCodeJSON(dirPath, envPath))
 		}
 		os.Exit(runScanCode(dirPath, envPath))
 	case "security":
@@ -1825,10 +2637,18 @@ func main() {
 			printSecurityHelp()
 			os.Exit(0)
 		}
-		dirPath, envPath, err := getScanCodeOptions(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		dirPath, envPath, err := getScanCodeOptions(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runSecurityJSON(dirPath, envPath))
 		}
 		os.Exit(runSecurity(dirPath, envPath))
 	case "log-scan":
@@ -1836,10 +2656,18 @@ func main() {
 			printLogScanHelp()
 			os.Exit(0)
 		}
-		dirPath, err := getLogScanDir(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		dirPath, err := getLogScanDir(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runLogScanJSON(dirPath))
 		}
 		os.Exit(runLogScan(dirPath))
 	case "encrypt":
@@ -1869,10 +2697,18 @@ func main() {
 			printDockerHelp()
 			os.Exit(0)
 		}
-		dockerfilePath, envPath, err := getDockerOptions(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		dockerfilePath, envPath, err := getDockerOptions(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runDockerJSON(dockerfilePath, envPath))
 		}
 		os.Exit(runDocker(dockerfilePath, envPath))
 	case "ci":
@@ -1880,10 +2716,18 @@ func main() {
 			printCIHelp()
 			os.Exit(0)
 		}
-		envPath, examplePath, err := getValidatePaths(args[1:])
+		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
+		}
+		envPath, examplePath, err := getValidatePaths(commandArgs)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		if jsonOutput {
+			os.Exit(runCIJSON(envPath, examplePath))
 		}
 		os.Exit(runCI(envPath, examplePath))
 	case "run":

@@ -1,0 +1,45 @@
+name: Env Guardian
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  envguard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: go build -o envguard ./cmd/envguard
+
+      - name: Prepare example env
+        run: |
+          cat > .env <<'EOF'
+          API_URL=https://example.com
+          DATABASE_URL=postgres://localhost:5432/app
+          DEBUG=false
+          JWT_SECRET=change-me
+          PORT=8080
+          EOF
+
+      - name: Validate env
+        run: ./envguard ci --json
+
+      - name: Scan security
+        run: ./envguard security --json
+
+      - name: Scan log exposure
+        run: ./envguard log-scan --json
