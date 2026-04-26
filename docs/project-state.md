@@ -6,16 +6,16 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, and diagnose e
 ---
 
 ## Current Version
-v0.1.4
+v0.1.5
 
 ---
 
 ## Current Status
-## v0.1.4 COMPLETE
+## v0.1.5 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, and security scanning.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, and log exposure protection.
 
-The CLI is stable for the completed backend roadmap blocks up through Security.
+The CLI is stable for the completed backend roadmap blocks up through Log Exposure Protection.
 
 ---
 
@@ -108,6 +108,14 @@ The CLI is stable for the completed backend roadmap blocks up through Security.
 
 ---
 
+### Log Exposure Protection
+- `log-scan` command
+- scans source code for direct logging of env variable values
+- scans `.log` files for common leaked secrets
+- scans `.log` files for sensitive key/value pairs
+
+---
+
 ### Workflow Commands
 
 #### Generate Example
@@ -169,6 +177,10 @@ The CLI is stable for the completed backend roadmap blocks up through Security.
 - `envguard security --file`
 - `envguard security --dir --file`
 
+### Log Exposure
+- `envguard log-scan`
+- `envguard log-scan --dir`
+
 ### Workflow
 - `envguard generate-example`
 - `envguard sync-example`
@@ -183,6 +195,7 @@ The CLI is stable for the completed backend roadmap blocks up through Security.
 - `internal/analyzer` - env insights
 - `internal/codebase` - codebase env usage scanning
 - `internal/security` - env, repository, git history security checks
+- `internal/logscan` - log exposure scanning
 - `internal/doctor` - diagnostics
 - `internal/version` - version constant
 
@@ -209,19 +222,15 @@ The CLI is stable for the completed backend roadmap blocks up through Security.
 - repository secret scanner
 - git history secret scanning
 - warn if `.env` is tracked by git
+- env log scan
+- accidental logging detection
+- log file secret detection
 
 ---
 
 ## Remaining Work (Next Phases)
 
-### Next Feature Block - Log Exposure Protection
-- env log scan
-- detect accidental logging of secrets
-- scan logs and code for exposed environment variables
-
----
-
-### Encryption
+### Next Feature Block - Encryption
 - env encrypt
 - env decrypt
 - secure key-based encryption for environment secrets
@@ -246,8 +255,8 @@ The CLI is stable for the completed backend roadmap blocks up through Security.
 1. Core Validation (DONE)
 2. Codebase Analysis (DONE)
 3. Security (DONE)
-4. Log Exposure Protection (NEXT)
-5. Encryption
+4. Log Exposure Protection (DONE)
+5. Encryption (NEXT)
 6. DevOps
 7. Developer Experience
 8. Final UX polish
@@ -258,11 +267,11 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.4
+- version: v0.1.5
 - CLI stable
-- ready for log exposure protection feature block
+- ready for encryption feature block
 
 ---
 
 ## Next Step
-Start **Log Exposure Protection** feature block
+Start **Encryption** feature block

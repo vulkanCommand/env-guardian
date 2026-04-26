@@ -58,6 +58,20 @@ var securityFileExtensions = map[string]bool{
 	".docker": true,
 }
 
+func DetectSecretKinds(value string) []string {
+	kinds := []string{}
+
+	for _, pattern := range secretPatterns {
+		if pattern.Pattern.MatchString(value) {
+			kinds = append(kinds, pattern.Kind)
+		}
+	}
+
+	sort.Strings(kinds)
+
+	return kinds
+}
+
 func Run(rootDir string, envPath string) (Result, error) {
 	result := Result{}
 
@@ -116,11 +130,9 @@ func ScanEnvFile(path string) ([]Finding, error) {
 		location := path + ":" + key
 
 		patternMatched := false
-		for _, pattern := range secretPatterns {
-			if pattern.Pattern.MatchString(value) {
-				findings = append(findings, Finding{Location: location, Kind: pattern.Kind})
-				patternMatched = true
-			}
+		for _, kind := range DetectSecretKinds(value) {
+			findings = append(findings, Finding{Location: location, Kind: kind})
+			patternMatched = true
 		}
 
 		if !patternMatched && isSensitiveKey(key) && looksSensitiveValue(value) {
@@ -202,14 +214,12 @@ func ScanGitHistory(rootDir string) ([]Finding, bool) {
 			continue
 		}
 
-		for _, pattern := range secretPatterns {
-			if pattern.Pattern.MatchString(line) {
-				location := "git history"
-				if currentCommit != "" {
-					location += ":" + currentCommit
-				}
-				findings = append(findings, Finding{Location: location, Kind: pattern.Kind})
+		for _, kind := range DetectSecretKinds(line) {
+			location := "git history"
+			if currentCommit != "" {
+				location += ":" + currentCommit
 			}
+			findings = append(findings, Finding{Location: location, Kind: kind})
 		}
 	}
 
@@ -236,13 +246,11 @@ func scanContent(path string, content []byte) []Finding {
 		lineNumber++
 		line := scanner.Text()
 
-		for _, pattern := range secretPatterns {
-			if pattern.Pattern.MatchString(line) {
-				findings = append(findings, Finding{
-					Location: path + ":" + strconv.Itoa(lineNumber),
-					Kind:     pattern.Kind,
-				})
-			}
+		for _, kind := range DetectSecretKinds(line) {
+			findings = append(findings, Finding{
+				Location: path + ":" + strconv.Itoa(lineNumber),
+				Kind:     kind,
+			})
 		}
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/vulkanCommand/env-guardian/internal/analyzer"
 	"github.com/vulkanCommand/env-guardian/internal/codebase"
 	"github.com/vulkanCommand/env-guardian/internal/linter"
+	"github.com/vulkanCommand/env-guardian/internal/logscan"
 	"github.com/vulkanCommand/env-guardian/internal/models"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
 	"github.com/vulkanCommand/env-guardian/internal/security"
@@ -28,6 +29,7 @@ func printHelp() {
 	fmt.Println("  envguard help doctor")
 	fmt.Println("  envguard help scan-code")
 	fmt.Println("  envguard help security")
+	fmt.Println("  envguard help log-scan")
 	fmt.Println("  envguard version")
 	fmt.Println("  envguard validate")
 	fmt.Println("  envguard validate --all")
@@ -44,6 +46,8 @@ func printHelp() {
 	fmt.Println("  envguard scan-code --dir . --file .env.prod")
 	fmt.Println("  envguard security")
 	fmt.Println("  envguard security --dir . --file .env.prod")
+	fmt.Println("  envguard log-scan")
+	fmt.Println("  envguard log-scan --dir .")
 	fmt.Println("  envguard generate-example")
 	fmt.Println("  envguard sync-example")
 }
@@ -138,6 +142,20 @@ func printSecurityHelp() {
 	fmt.Println("  --file      Env file to inspect")
 }
 
+func printLogScanHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard log-scan")
+	fmt.Println("  envguard log-scan --dir .")
+	fmt.Println("")
+	fmt.Println("Checks:")
+	fmt.Println("  - source code that logs env variable values")
+	fmt.Println("  - log files containing secret-looking values")
+	fmt.Println("  - log files containing sensitive key/value pairs")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --dir       Root directory to scan")
+}
+
 func hasHelpFlag(args []string) bool {
 	for _, arg := range args {
 		if arg == "--help" || arg == "-h" {
@@ -185,6 +203,9 @@ func handleHelpCommand(args []string) int {
 		return 0
 	case "security":
 		printSecurityHelp()
+		return 0
+	case "log-scan":
+		printLogScanHelp()
 		return 0
 	default:
 		fmt.Printf("Error: unknown help topic: %s\n", args[0])
@@ -577,6 +598,57 @@ func getScanCodeOptions(args []string) (string, string, error) {
 	}
 
 	return dirPath, envPath, nil
+}
+
+func getLogScanDir(args []string) (string, error) {
+	dirPath := "."
+	dirFlagSeen := false
+
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		if arg == "--dir" {
+			if dirFlagSeen {
+				return "", fmt.Errorf("duplicate flag: --dir")
+			}
+			if i+1 >= len(args) {
+				return "", fmt.Errorf("missing value for --dir")
+			}
+
+			next := args[i+1]
+			if strings.HasPrefix(next, "--") {
+				return "", fmt.Errorf("missing value for --dir")
+			}
+
+			dirPath = next
+			dirFlagSeen = true
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--dir=") {
+			if dirFlagSeen {
+				return "", fmt.Errorf("duplicate flag: --dir")
+			}
+
+			value := strings.TrimPrefix(arg, "--dir=")
+			if value == "" {
+				return "", fmt.Errorf("missing value for --dir")
+			}
+
+			dirPath = value
+			dirFlagSeen = true
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--") {
+			return "", fmt.Errorf("unknown flag: %s", arg)
+		}
+
+		return "", fmt.Errorf("unexpected argument: %s", arg)
+	}
+
+	return dirPath, nil
 }
 
 func runValidate(envPath string, examplePath string) int {
@@ -990,6 +1062,42 @@ func runSecurity(dirPath string, envPath string) int {
 	return 1
 }
 
+func runLogScan(dirPath string) int {
+	result, err := logscan.Run(dirPath)
+	if err != nil {
+		fmt.Printf("Error: could not scan logs in %s\n", dirPath)
+		return 1
+	}
+
+	sort.Slice(result.Findings, func(i, j int) bool {
+		if result.Findings[i].Location == result.Findings[j].Location {
+			return result.Findings[i].Kind < result.Findings[j].Kind
+		}
+		return result.Findings[i].Location < result.Findings[j].Location
+	})
+
+	fmt.Println("Env Log Exposure Report")
+	fmt.Println("-----------------------")
+	fmt.Printf("Root directory: %s\n", dirPath)
+	fmt.Printf("Scanned files: %d\n\n", result.ScannedFilesCount)
+
+	if len(result.Findings) == 0 {
+		fmt.Println("[PASS] Log exposure scan found no issues")
+		fmt.Println("")
+		fmt.Printf("Summary: %d log exposure finding(s)\n", len(result.Findings))
+		return 0
+	}
+
+	for _, finding := range result.Findings {
+		fmt.Printf("[ERROR] Log exposure: %s (%s)\n", finding.Location, finding.Kind)
+	}
+
+	fmt.Println("")
+	fmt.Printf("Summary: %d log exposure finding(s)\n", len(result.Findings))
+
+	return 1
+}
+
 func runScanCode(dirPath string, envPath string) int {
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
@@ -1239,6 +1347,17 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(runSecurity(dirPath, envPath))
+	case "log-scan":
+		if hasHelpFlag(args[1:]) {
+			printLogScanHelp()
+			os.Exit(0)
+		}
+		dirPath, err := getLogScanDir(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runLogScan(dirPath))
 	case "generate-example":
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
