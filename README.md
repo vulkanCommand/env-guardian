@@ -20,6 +20,7 @@ Env Guardian helps you catch environment configuration issues early:
 - invalid env syntax
 - invalid typed values through an optional schema
 - potential sensitive keys
+- codebase env usage mismatches
 
 ---
 
@@ -83,6 +84,32 @@ Checks:
 - example file existence
 - missing required keys
 
+### Scan Code
+
+```bash
+envguard scan-code
+envguard scan-code --dir .
+envguard scan-code --dir . --file .env.prod
+```
+
+Checks:
+- env variables used in code but missing in the env file
+- env variables present in the env file but not used in code
+- likely variable naming mismatches
+
+Supported patterns include Go, JavaScript, TypeScript, and Python env access.
+
+### Workflow
+
+```bash
+envguard generate-example
+envguard sync-example
+```
+
+Checks:
+- generate `.env.example` from `.env`
+- sync missing keys from `.env` into `.env.example`
+
 ---
 
 ## Type Validation
@@ -130,8 +157,7 @@ Run:
 Tests:
 
 ```bash
-go test ./internal/validator
-go test ./internal/parser
+go test ./...
 ```
 
 ---
@@ -150,6 +176,8 @@ Completed in this version:
 - validator test coverage for empty schema behavior
 - validate help updated to reflect optional schema behavior
 - multi-environment validation via `--all`
+- codebase env usage scan command
+- example generation and sync workflow commands
 
 ---
 
@@ -162,15 +190,15 @@ Completed in this version:
 - doctor
 - schema-based type validation
 - optional schema support
+- codebase env usage analysis
+- team workflow commands
 
 ### Next
-- environment consistency checks across multiple env files
-- sync `.env` with `.env.example`
-- generate `.env.example` automatically
+- secret detection
+- warn if `.env` is committed
+- log exposure checks
 
 ### Later
-- codebase env usage analysis
-- secret detection
 - CI/CD integration
 - GitHub Action
 - VS Code extension

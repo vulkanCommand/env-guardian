@@ -29,7 +29,7 @@ func Run() DoctorResult {
 		exampleFile, err2 := parser.ParseEnvFile(".env.example")
 
 		if err1 == nil && err2 == nil {
-			validationResult := validator.ValidateEnv(envFile, exampleFile)
+			validationResult := validator.ValidateEnv(envFile, exampleFile, map[string]string{})
 			result.MissingInEnv = validationResult.MissingKeys
 		}
 	}

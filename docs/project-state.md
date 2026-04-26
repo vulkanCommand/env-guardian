@@ -1,4 +1,4 @@
-# Env Guardian — Project State
+# Env Guardian - Project State
 
 ## Project Goal
 Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environment variables before they break applications.
@@ -6,25 +6,16 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 ---
 
 ## Current Version
-v0.1.2
+v0.1.3
 
 ---
 
 ## Current Status
-## v1.2 COMPLETE
+## v0.1.3 COMPLETE
 
-The project has moved beyond v1.1 and now includes the full v1.2 checkpoint.
+The project has progressed beyond basic validation and now includes multi-environment validation, workflow tooling, and codebase env usage analysis.
 
-Completed in this version:
-- schema-based type validation
-- support for boolean validation
-- support for number validation
-- support for URL validation
-- validator unit tests for typed values
-- CLI help updated to reflect typed validation
-- feature committed and pushed to GitHub
-
-The project is now ready for the next feature block.
+The CLI is stable and feature-complete for core environment validation.
 
 ---
 
@@ -34,321 +25,230 @@ The project is now ready for the next feature block.
 - `validate` command
 - detects missing keys
 - detects duplicate keys
-- detects unused keys as warnings
+- detects unused keys (as warnings)
 - detects invalid typed values using schema
-- compares target env file with example env file
+- compares `.env` with `.env.example`
 - supports:
   - `envguard validate`
-  - `envguard validate --file .env.prod`
-  - `envguard validate --example .env.example.prod`
-  - `envguard validate --file .env.prod --example .env.example.prod`
-- rejects invalid, unknown, missing, or duplicate flags
-- prints formatted summary with error and warning counts
+  - `envguard validate --file`
+  - `envguard validate --example`
+  - `envguard validate --file --example`
+- prints formatted summary with errors and warnings
 - returns proper exit codes
-
-### Type Validation
-- schema file path: `examples/.env.types`
-- schema format: `KEY=type`
-- supported types:
-  - `boolean` → `true` or `false`
-  - `number` → numeric values using ParseFloat
-  - `url` → valid URL with scheme and host
-- type validation runs only when:
-  - the key exists in the schema
-  - the key exists in `.env`
-- CLI output format for invalid types:
-  - `[ERROR] Invalid type: KEY expected <type> but got "<value>"`
-
-### Linting
-- `lint` command
-- detects invalid lines
-- detects missing `=`
-- detects empty keys
-- validates env syntax
-- ignores comments and empty lines
-- supports:
-  - `envguard lint`
-  - `envguard lint --file .env.prod`
-- rejects invalid, unknown, missing, or duplicate flags
-- prints formatted summary
-- returns proper exit codes
-
-### Analysis
-- `analyze` command
-- counts total keys
-- detects empty values
-- detects potential sensitive keys
-- supports:
-  - `envguard analyze`
-  - `envguard analyze --file .env.prod`
-- rejects invalid, unknown, missing, or duplicate flags
-- prints formatted summary
-- returns proper exit codes
-
-### Doctor
-- `doctor` command
-- checks target env file existence
-- checks example env file existence
-- detects missing keys from example file
-- supports:
-  - `envguard doctor`
-  - `envguard doctor --file .env.prod --example .env.example.prod`
-- rejects invalid, unknown, missing, or duplicate flags
-- prints formatted summary
-- returns proper exit codes
-
-### CLI / UX
-- `version` command
-- root help works:
-  - `envguard`
-  - `envguard help`
-  - `envguard --help`
-- topic help works:
-  - `envguard help validate`
-  - `envguard help lint`
-  - `envguard help analyze`
-  - `envguard help doctor`
-- subcommand help works:
-  - `envguard validate --help`
-  - `envguard lint --help`
-  - `envguard analyze --help`
-  - `envguard doctor --help`
-- `envguard help validate` now includes typed validation info and references `examples/.env.types`
 
 ---
 
-## Completed In This Chat
+### Multi-Environment Validation
+- `envguard validate --all`
+- supports:
+  - `.env.dev`
+  - `.env.prod`
+  - `.env.test`
+- runs validation per environment
+- performs cross-environment consistency check
+- identifies missing keys across environments
 
-### v0.1.2 Features Completed
-- created schema loader in `internal/parser/types.go`
-- added schema loading into validate flow
-- threaded schema into validator layer
-- added `InvalidTypeValues` to validation result
-- implemented boolean validation
-- implemented number validation
-- implemented URL validation
-- added CLI output for invalid type errors
-- added validator unit tests
-- fixed test structure to match `models.EnvFile`
-- verified success and failure scenarios manually in CLI
-- renamed schema file to `.env.types`
-- updated validate help output
-- bumped version to `v0.1.2`
-- committed and pushed changes to GitHub
+---
+
+### Type Validation
+- schema file: `examples/.env.types`
+- optional (does not fail if missing)
+- supported types:
+  - boolean
+  - number
+  - URL
+
+---
+
+### Linting
+- `lint` command
+- detects:
+  - invalid syntax
+  - missing `=`
+  - empty keys
+- ignores comments and empty lines
+
+---
+
+### Analysis
+- `analyze` command
+- outputs:
+  - total key count
+  - empty values
+  - potential sensitive keys (e.g., SECRET, JWT)
+
+---
+
+### Doctor
+- `doctor` command
+- checks:
+  - `.env` existence
+  - `.env.example` existence
+  - missing keys in `.env` compared to example
+
+---
+
+### Codebase Analysis
+- `scan-code` command
+- scans Go, JavaScript, TypeScript, and Python source files
+- detects env variables used in code but missing in the env file
+- detects env variables present in the env file but unused in code
+- detects likely variable naming mismatches
+
+---
+
+### Workflow Commands
+
+#### Generate Example
+- `envguard generate-example`
+- creates `.env.example` from `.env`
+- preserves keys
+- sets empty values
+
+#### Sync Example
+- `envguard sync-example`
+- adds missing keys from `.env` into `.env.example`
+- does not overwrite existing keys
+- safe incremental update
+
+---
+
+### CLI / UX
+- `version`
+- `help`
+- command-specific help
+- strict flag validation
+- consistent output formatting
 
 ---
 
 ## Current Commands
 
-### Root
+### Core
 - `envguard help`
 - `envguard version`
 
 ### Validation
 - `envguard validate`
-- `envguard validate --file .env.prod`
-- `envguard validate --example .env.example.prod`
-- `envguard validate --file .env.prod --example .env.example.prod`
+- `envguard validate --all`
+- `envguard validate --file`
+- `envguard validate --example`
 
 ### Lint
 - `envguard lint`
-- `envguard lint --file .env.prod`
+- `envguard lint --file`
 
 ### Analyze
 - `envguard analyze`
-- `envguard analyze --file .env.prod`
+- `envguard analyze --file`
 
 ### Doctor
 - `envguard doctor`
-- `envguard doctor --file .env.prod --example .env.example.prod`
+- `envguard doctor --file --example`
 
-### Help Topics
-- `envguard help validate`
-- `envguard help lint`
-- `envguard help analyze`
-- `envguard help doctor`
+### Codebase Analysis
+- `envguard scan-code`
+- `envguard scan-code --dir`
+- `envguard scan-code --file`
+- `envguard scan-code --dir --file`
 
-### Tests
-- `go test ./internal/validator`
+### Workflow
+- `envguard generate-example`
+- `envguard sync-example`
 
 ---
 
 ## Architecture
-- `cmd/envguard` → CLI entry point
-- `internal/parser` → parses env files and loads `.env.types`
-- `internal/validator` → validation logic and type validation
-- `internal/linter` → lint logic
-- `internal/analyzer` → analysis logic
-- `internal/doctor` → doctor diagnostics
-- `internal/version` → version constant
-- `internal/reporter` → future output formatting layer
+- `cmd/envguard` - CLI entry point
+- `internal/parser` - env parsing + schema loading
+- `internal/validator` - validation + type checks
+- `internal/linter` - syntax checks
+- `internal/analyzer` - env insights
+- `internal/codebase` - codebase env usage scanning
+- `internal/doctor` - diagnostics
+- `internal/version` - version constant
 
 ---
 
 ## Feature Coverage vs Vision
 
-### Implemented
-
-#### Core Validation
+### Completed
 - env validation
 - syntax linting
-- missing variable detection
-- duplicate variable detection
-- unused variable detection
-- `.env` vs `.env.example` comparison
-- custom target file selection
-- custom example file selection
-- schema-based typed value validation
-
-#### Analysis
-- total key count
-- empty value detection
-- potential sensitive key detection
-
-#### Doctor
-- env presence checks
-- example presence checks
-- missing required key checks
-- summary output
-- proper exit codes
-
-#### CLI
-- version command
-- help command
-- command-specific help
-- stricter argument handling
-
-#### Type Validation Coverage
-- boolean
-- number
-- URL
+- duplicate detection
+- missing key detection
+- unused key detection
+- type validation (optional schema)
+- multi-environment validation
+- cross-environment consistency check
+- example generation
+- example sync
+- codebase env usage analysis
+- code/env missing key detection
+- env/code unused key detection
+- env variable naming mismatch detection
 
 ---
 
-## Remaining Work
+## Remaining Work (Next Phases)
 
-### Immediate Next Feature Block
-#### v0.1.3 — Make Schema Optional
-Current issue:
-- CLI fails if `examples/.env.types` is missing
+### Next Feature Block - Security
+- secret pattern detection
+- repo secret scanner
+- git history scanning
+- warn if `.env` committed
 
-Next change:
-- if schema file is missing:
-  - do not fail validation
-  - skip type validation
-  - continue normal validation flow
-
-Expected behavior:
-- graceful fallback
-- non-breaking validate command
-- typed validation only when schema exists
-
-### Core Environment Validation
-- optional schema support
-- multi-environment support across `.env.dev`, `.env.prod`, `.env.test`
-- environment consistency check across multiple environment files
-- sync `.env` with `.env.example`
-- generate `.env.example` automatically
-
-### Codebase Analysis
-- scan codebase for env usage
-- detect variables used in code but missing in env files
-- detect variables present in env files but unused in code
-- detect variable naming mismatches
-
-### Security
-- real secret detection with patterns
-- repository secret scanner
-- git history secret scanning
-- warn if `.env` is committed
+---
 
 ### Log Exposure Protection
 - env log scan
 - detect accidental logging of secrets
-- detect exposed tokens, keys, and passwords in logs or code
+- scan logs and code for exposed environment variables
+
+---
 
 ### Encryption
 - env encrypt
 - env decrypt
-- key-based secret encryption
+- secure key-based encryption for environment secrets
+
+---
 
 ### DevOps / Runtime
-- Docker environment validation
+- Docker validation
 - CI/CD validation mode
 - pre-start validation wrapper
 
+---
+
 ### Developer Experience
 - JSON output
-- GitHub Action integration
+- GitHub Action
 - VS Code extension
-
-### Meta Tool
-- full aggregated env doctor report
 
 ---
 
 ## Development Strategy
-Proceed strictly in this order:
-1. Core Validation Improvements
-2. Codebase Analysis
-3. Security
-4. DevOps
-5. Developer Experience
-6. Final UX polish
+1. Core Validation (DONE)
+2. Codebase Analysis (DONE)
+3. Security (NEXT)
+4. Log Exposure Protection
+5. Encryption
+6. DevOps
+7. Developer Experience
+8. Final UX polish
 
 No jumping ahead.
 
 ---
 
-## Release Notes
-
-### v0.1.0
-- initial working CLI
-- validate
-- lint
-- analyze
-- doctor
-- parser and validator foundations
-
-### v0.1.1
-- validate file and example flags
-- lint file flag
-- analyze file flag
-- doctor file and example flags
-- unused variable detection
-- improved summaries
-- safer CLI flag parsing
-- command help support
-
-### v0.1.2
-- added schema-based type validation
-- added support for boolean, number, and URL types
-- added `examples/.env.types`
-- added `InvalidTypeValues` validation result handling
-- added CLI invalid type output
-- added validator unit tests
-- updated validate help text
-- bumped version to `v0.1.2`
-
----
-
 ## Git Status
-- branch: `main`
-- current version: `v0.1.2`
-- latest commit: `feat: add schema-based type validation for env variables (boolean, number, url)`
-- pushed to GitHub: yes
+- branch: main
+- version: v0.1.3
+- CLI stable
+- ready for security feature block
 
 ---
 
-## Important Notes For Next Chat
-- `scripts/deploy.sh` is currently empty and not part of the working release flow yet
-- use direct git commands for now
-- no refactors unless explicitly needed
-- keep the one-step-at-a-time workflow
-- do not jump ahead to JSON output, security, or CI/CD yet
-- the exact next implementation target is: make schema optional without breaking validate
-
----
-
-## Next Chat Start Line
-Continue v0.1.3 — make schema optional
+## Next Step
+Start **Security** feature block

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/vulkanCommand/env-guardian/internal/analyzer"
+	"github.com/vulkanCommand/env-guardian/internal/codebase"
 	"github.com/vulkanCommand/env-guardian/internal/linter"
 	"github.com/vulkanCommand/env-guardian/internal/models"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
@@ -24,6 +25,7 @@ func printHelp() {
 	fmt.Println("  envguard help lint")
 	fmt.Println("  envguard help analyze")
 	fmt.Println("  envguard help doctor")
+	fmt.Println("  envguard help scan-code")
 	fmt.Println("  envguard version")
 	fmt.Println("  envguard validate")
 	fmt.Println("  envguard validate --all")
@@ -35,6 +37,11 @@ func printHelp() {
 	fmt.Println("  envguard analyze --file .env.prod")
 	fmt.Println("  envguard doctor")
 	fmt.Println("  envguard doctor --file .env.prod --example .env.example.prod")
+	fmt.Println("  envguard scan-code")
+	fmt.Println("  envguard scan-code --dir .")
+	fmt.Println("  envguard scan-code --dir . --file .env.prod")
+	fmt.Println("  envguard generate-example")
+	fmt.Println("  envguard sync-example")
 }
 
 func printValidateHelp() {
@@ -84,6 +91,31 @@ func printDoctorHelp() {
 	fmt.Println("  --example   Example env file to compare against")
 }
 
+func printScanCodeHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard scan-code")
+	fmt.Println("  envguard scan-code --dir .")
+	fmt.Println("  envguard scan-code --dir . --file .env.prod")
+	fmt.Println("")
+	fmt.Println("Checks:")
+	fmt.Println("  - env variables used in code but missing in the env file")
+	fmt.Println("  - env variables present in the env file but not used in code")
+	fmt.Println("  - likely variable naming mismatches")
+	fmt.Println("")
+	fmt.Println("Supported patterns:")
+	fmt.Println("  - os.Getenv(\"KEY\")")
+	fmt.Println("  - os.LookupEnv(\"KEY\")")
+	fmt.Println("  - process.env.KEY")
+	fmt.Println("  - process.env[\"KEY\"]")
+	fmt.Println("  - import.meta.env.KEY")
+	fmt.Println("  - os.getenv(\"KEY\")")
+	fmt.Println("  - os.environ[\"KEY\"]")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --dir       Root directory to scan")
+	fmt.Println("  --file      Env file to compare against")
+}
+
 func hasHelpFlag(args []string) bool {
 	for _, arg := range args {
 		if arg == "--help" || arg == "-h" {
@@ -125,6 +157,9 @@ func handleHelpCommand(args []string) int {
 		return 0
 	case "doctor":
 		printDoctorHelp()
+		return 0
+	case "scan-code":
+		printScanCodeHelp()
 		return 0
 	default:
 		fmt.Printf("Error: unknown help topic: %s\n", args[0])
@@ -432,6 +467,93 @@ func getDoctorPaths(args []string) (string, string, error) {
 	return envPath, examplePath, nil
 }
 
+func getScanCodeOptions(args []string) (string, string, error) {
+	dirPath := "."
+	envPath := ".env"
+	dirFlagSeen := false
+	fileFlagSeen := false
+
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		if arg == "--dir" {
+			if dirFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --dir")
+			}
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("missing value for --dir")
+			}
+
+			next := args[i+1]
+			if strings.HasPrefix(next, "--") {
+				return "", "", fmt.Errorf("missing value for --dir")
+			}
+
+			dirPath = next
+			dirFlagSeen = true
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--dir=") {
+			if dirFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --dir")
+			}
+
+			value := strings.TrimPrefix(arg, "--dir=")
+			if value == "" {
+				return "", "", fmt.Errorf("missing value for --dir")
+			}
+
+			dirPath = value
+			dirFlagSeen = true
+			continue
+		}
+
+		if arg == "--file" {
+			if fileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --file")
+			}
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			next := args[i+1]
+			if strings.HasPrefix(next, "--") {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			envPath = next
+			fileFlagSeen = true
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--file=") {
+			if fileFlagSeen {
+				return "", "", fmt.Errorf("duplicate flag: --file")
+			}
+
+			value := strings.TrimPrefix(arg, "--file=")
+			if value == "" {
+				return "", "", fmt.Errorf("missing value for --file")
+			}
+
+			envPath = value
+			fileFlagSeen = true
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--") {
+			return "", "", fmt.Errorf("unknown flag: %s", arg)
+		}
+
+		return "", "", fmt.Errorf("unexpected argument: %s", arg)
+	}
+
+	return dirPath, envPath, nil
+}
+
 func runValidate(envPath string, examplePath string) int {
 	schema := map[string]string{}
 
@@ -487,6 +609,11 @@ func runValidate(envPath string, examplePath string) int {
 		errorCount++
 	}
 
+	for _, key := range result.UnusedKeys {
+		fmt.Printf("[WARN] Unused key: %s\n", key)
+		warningCount++
+	}
+
 	if errorCount == 0 && warningCount == 0 {
 		fmt.Println("[PASS] Environment configuration looks good")
 		fmt.Println("")
@@ -495,6 +622,7 @@ func runValidate(envPath string, examplePath string) int {
 	}
 
 	if errorCount == 0 && warningCount > 0 {
+		fmt.Println("")
 		fmt.Println("[PASS] Environment configuration is valid with warnings")
 		fmt.Println("")
 		fmt.Printf("Summary: %d error(s), %d warning(s)\n", errorCount, warningCount)
@@ -564,7 +692,6 @@ func runValidateAll() int {
 		if err == nil && err2 == nil {
 			envFiles[target.label] = envFile
 
-			// capture validation missing keys
 			result := validator.ValidateEnv(envFile, exampleFile, map[string]string{})
 			missingSet := make(map[string]bool)
 			for _, key := range result.MissingKeys {
@@ -583,7 +710,6 @@ func runValidateAll() int {
 		}
 	}
 
-	// consistency check
 	if len(envFiles) > 1 {
 		fmt.Println("====================================")
 		fmt.Println("Cross-Environment Consistency Check")
@@ -627,6 +753,7 @@ func runValidateAll() int {
 
 	return finalExitCode
 }
+
 func runLint(envPath string) int {
 	result, err := linter.Run(envPath)
 	if err != nil {
@@ -770,6 +897,166 @@ func runDoctor(envPath string, examplePath string) int {
 	return 0
 }
 
+func runScanCode(dirPath string, envPath string) int {
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		fmt.Printf("Error: could not read %s\n", envPath)
+		return 1
+	}
+
+	result, err := codebase.Run(dirPath, envFile.Values)
+	if err != nil {
+		fmt.Printf("Error: could not scan codebase in %s\n", dirPath)
+		return 1
+	}
+
+	fmt.Println("Codebase Analysis Report")
+	fmt.Println("------------------------")
+	fmt.Printf("Root directory: %s\n", dirPath)
+	fmt.Printf("Env file: %s\n", envPath)
+	fmt.Printf("Scanned files: %d\n", result.ScannedFilesCount)
+	fmt.Printf("Detected env usages: %d\n", len(result.UsedKeys))
+
+	if len(result.NamingMismatches) > 0 {
+		fmt.Println("\nLikely naming mismatches:")
+		for _, mismatch := range result.NamingMismatches {
+			fmt.Printf("[WARN] Code uses %s but env file contains %s\n", mismatch.CodeKey, mismatch.EnvKey)
+		}
+	}
+
+	if len(result.MissingInEnv) > 0 {
+		fmt.Println("\nUsed in code but missing in env file:")
+		for _, key := range result.MissingInEnv {
+			fmt.Printf("[ERROR] Missing env key for code usage: %s\n", key)
+		}
+	}
+
+	if len(result.UnusedInEnv) > 0 {
+		fmt.Println("\nPresent in env file but unused in code:")
+		for _, key := range result.UnusedInEnv {
+			fmt.Printf("[WARN] Unused env key in codebase: %s\n", key)
+		}
+	}
+
+	if len(result.NamingMismatches) == 0 && len(result.MissingInEnv) == 0 && len(result.UnusedInEnv) == 0 {
+		fmt.Println("\n[PASS] Codebase analysis found no issues")
+	}
+
+	fmt.Println("")
+	fmt.Printf(
+		"Summary: %d naming mismatch(es), %d missing env key(s), %d unused env key(s)\n",
+		len(result.NamingMismatches),
+		len(result.MissingInEnv),
+		len(result.UnusedInEnv),
+	)
+
+	if len(result.MissingInEnv) > 0 {
+		return 1
+	}
+
+	return 0
+}
+
+func runGenerateExample(envPath string) int {
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		fmt.Printf("Error: could not read %s\n", envPath)
+		return 1
+	}
+
+	outputPath := ".env.example"
+
+	file, err := os.Create(outputPath)
+	if err != nil {
+		fmt.Printf("Error: could not create %s\n", outputPath)
+		return 1
+	}
+	defer file.Close()
+
+	keys := make([]string, 0, len(envFile.Values))
+	for key := range envFile.Values {
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		_, err := file.WriteString(fmt.Sprintf("%s=\n", key))
+		if err != nil {
+			fmt.Println("Error: failed to write to file")
+			return 1
+		}
+	}
+
+	fmt.Println("Env Example Generated")
+	fmt.Println("---------------------")
+	fmt.Printf("Source file: %s\n", envPath)
+	fmt.Printf("Output file: %s\n\n", outputPath)
+	fmt.Printf("Generated %d keys\n", len(keys))
+
+	return 0
+}
+
+func runSyncExample(envPath string) int {
+	envFile, err := parser.ParseEnvFile(envPath)
+	if err != nil {
+		fmt.Printf("Error: could not read %s\n", envPath)
+		return 1
+	}
+
+	examplePath := ".env.example"
+
+	exampleFile, err := parser.ParseEnvFile(examplePath)
+
+	existingKeys := map[string]bool{}
+	if err == nil {
+		for key := range exampleFile.Values {
+			existingKeys[key] = true
+		}
+	}
+
+	file, err := os.OpenFile(examplePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Printf("Error: could not open %s\n", examplePath)
+		return 1
+	}
+	defer file.Close()
+
+	newKeys := []string{}
+
+	for key := range envFile.Values {
+		if !existingKeys[key] {
+			newKeys = append(newKeys, key)
+		}
+	}
+
+	sort.Strings(newKeys)
+
+	for _, key := range newKeys {
+		_, err := file.WriteString(fmt.Sprintf("%s=\n", key))
+		if err != nil {
+			fmt.Println("Error: failed to write to file")
+			return 1
+		}
+	}
+
+	fmt.Println("Env Example Sync Report")
+	fmt.Println("------------------------")
+	fmt.Printf("Source file: %s\n", envPath)
+	fmt.Printf("Synced file: %s\n\n", examplePath)
+
+	if len(newKeys) == 0 {
+		fmt.Println("[PASS] .env.example already up to date")
+	} else {
+		fmt.Printf("Added %d new key(s):\n", len(newKeys))
+		for _, key := range newKeys {
+			fmt.Printf("- %s\n", key)
+		}
+	}
+
+	return 0
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -837,6 +1124,31 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(runDoctor(envPath, examplePath))
+	case "scan-code":
+		if hasHelpFlag(args[1:]) {
+			printScanCodeHelp()
+			os.Exit(0)
+		}
+		dirPath, envPath, err := getScanCodeOptions(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runScanCode(dirPath, envPath))
+	case "generate-example":
+		envPath, err := getLintFilePath(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runGenerateExample(envPath))
+	case "sync-example":
+		envPath, err := getLintFilePath(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runSyncExample(envPath))
 	case "help":
 		os.Exit(handleHelpCommand(args[1:]))
 	case "--help", "-h":
