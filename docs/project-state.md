@@ -1,21 +1,21 @@
 # Env Guardian - Project State
 
 ## Project Goal
-Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environment variables before they break applications.
+Env Guardian is a Go CLI tool to validate, lint, analyze, secure, and diagnose environment variables before they break applications.
 
 ---
 
 ## Current Version
-v0.1.3
+v0.1.4
 
 ---
 
 ## Current Status
-## v0.1.3 COMPLETE
+## v0.1.4 COMPLETE
 
-The project has progressed beyond basic validation and now includes multi-environment validation, workflow tooling, and codebase env usage analysis.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, and security scanning.
 
-The CLI is stable and feature-complete for core environment validation.
+The CLI is stable for the completed backend roadmap blocks up through Security.
 
 ---
 
@@ -75,7 +75,7 @@ The CLI is stable and feature-complete for core environment validation.
 - outputs:
   - total key count
   - empty values
-  - potential sensitive keys (e.g., SECRET, JWT)
+  - potential sensitive keys
 
 ---
 
@@ -85,6 +85,7 @@ The CLI is stable and feature-complete for core environment validation.
   - `.env` existence
   - `.env.example` existence
   - missing keys in `.env` compared to example
+  - tracked `.env` warning
 
 ---
 
@@ -94,6 +95,16 @@ The CLI is stable and feature-complete for core environment validation.
 - detects env variables used in code but missing in the env file
 - detects env variables present in the env file but unused in code
 - detects likely variable naming mismatches
+
+---
+
+### Security
+- `security` command
+- detects secret-looking values in env files
+- scans repository files for common leaked secrets
+- scans git history for common leaked secrets
+- warns when the target env file is tracked by git
+- supported patterns include AWS, OpenAI, Stripe, GitHub, Slack, and private key blocks
 
 ---
 
@@ -152,6 +163,12 @@ The CLI is stable and feature-complete for core environment validation.
 - `envguard scan-code --file`
 - `envguard scan-code --dir --file`
 
+### Security
+- `envguard security`
+- `envguard security --dir`
+- `envguard security --file`
+- `envguard security --dir --file`
+
 ### Workflow
 - `envguard generate-example`
 - `envguard sync-example`
@@ -165,6 +182,7 @@ The CLI is stable and feature-complete for core environment validation.
 - `internal/linter` - syntax checks
 - `internal/analyzer` - env insights
 - `internal/codebase` - codebase env usage scanning
+- `internal/security` - env, repository, git history security checks
 - `internal/doctor` - diagnostics
 - `internal/version` - version constant
 
@@ -187,20 +205,16 @@ The CLI is stable and feature-complete for core environment validation.
 - code/env missing key detection
 - env/code unused key detection
 - env variable naming mismatch detection
+- secret leak detection in `.env`
+- repository secret scanner
+- git history secret scanning
+- warn if `.env` is tracked by git
 
 ---
 
 ## Remaining Work (Next Phases)
 
-### Next Feature Block - Security
-- secret pattern detection
-- repo secret scanner
-- git history scanning
-- warn if `.env` committed
-
----
-
-### Log Exposure Protection
+### Next Feature Block - Log Exposure Protection
 - env log scan
 - detect accidental logging of secrets
 - scan logs and code for exposed environment variables
@@ -231,8 +245,8 @@ The CLI is stable and feature-complete for core environment validation.
 ## Development Strategy
 1. Core Validation (DONE)
 2. Codebase Analysis (DONE)
-3. Security (NEXT)
-4. Log Exposure Protection
+3. Security (DONE)
+4. Log Exposure Protection (NEXT)
 5. Encryption
 6. DevOps
 7. Developer Experience
@@ -244,11 +258,11 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.3
+- version: v0.1.4
 - CLI stable
-- ready for security feature block
+- ready for log exposure protection feature block
 
 ---
 
 ## Next Step
-Start **Security** feature block
+Start **Log Exposure Protection** feature block

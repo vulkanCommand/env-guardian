@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.3
+v0.1.4
 
 ---
 
@@ -21,6 +21,7 @@ Env Guardian helps you catch environment configuration issues early:
 - invalid typed values through an optional schema
 - potential sensitive keys
 - codebase env usage mismatches
+- secret leaks in env files, repository files, and git history
 
 ---
 
@@ -83,6 +84,22 @@ Checks:
 - env file existence
 - example file existence
 - missing required keys
+- tracked env file warning
+
+### Security
+
+```bash
+envguard security
+envguard security --dir .
+envguard security --file .env.prod
+envguard security --dir . --file .env.prod
+```
+
+Checks:
+- secret-looking values in the env file
+- secret-looking values in repository files
+- secret-looking values in git history
+- tracked env files in git
 
 ### Scan Code
 
@@ -164,20 +181,14 @@ go test ./...
 
 ## Current Status
 
-v0.1.3 is complete.
+v0.1.4 is complete.
 
 Completed in this version:
-- schema-based type validation
-- support for boolean validation
-- support for number validation
-- support for URL validation
-- optional schema support
-- parser test coverage for missing schema fallback
-- validator test coverage for empty schema behavior
-- validate help updated to reflect optional schema behavior
-- multi-environment validation via `--all`
-- codebase env usage scan command
-- example generation and sync workflow commands
+- env file secret leak detection
+- repository secret scanner
+- git history secret scanner
+- tracked `.env` warning
+- doctor security warning
 
 ---
 
@@ -192,13 +203,14 @@ Completed in this version:
 - optional schema support
 - codebase env usage analysis
 - team workflow commands
+- security scanning
 
 ### Next
-- secret detection
-- warn if `.env` is committed
 - log exposure checks
+- encryption
 
 ### Later
+- DevOps/runtime validation
 - CI/CD integration
 - GitHub Action
 - VS Code extension

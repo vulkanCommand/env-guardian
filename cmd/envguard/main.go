@@ -11,13 +11,14 @@ import (
 	"github.com/vulkanCommand/env-guardian/internal/linter"
 	"github.com/vulkanCommand/env-guardian/internal/models"
 	"github.com/vulkanCommand/env-guardian/internal/parser"
+	"github.com/vulkanCommand/env-guardian/internal/security"
 	"github.com/vulkanCommand/env-guardian/internal/validator"
 	"github.com/vulkanCommand/env-guardian/internal/version"
 )
 
 func printHelp() {
 	fmt.Println("envguard")
-	fmt.Println("A CLI tool to validate, lint, and analyze environment variables.")
+	fmt.Println("A CLI tool to validate, lint, analyze, and secure environment variables.")
 	fmt.Println("")
 	fmt.Println("Usage:")
 	fmt.Println("  envguard help")
@@ -26,6 +27,7 @@ func printHelp() {
 	fmt.Println("  envguard help analyze")
 	fmt.Println("  envguard help doctor")
 	fmt.Println("  envguard help scan-code")
+	fmt.Println("  envguard help security")
 	fmt.Println("  envguard version")
 	fmt.Println("  envguard validate")
 	fmt.Println("  envguard validate --all")
@@ -40,6 +42,8 @@ func printHelp() {
 	fmt.Println("  envguard scan-code")
 	fmt.Println("  envguard scan-code --dir .")
 	fmt.Println("  envguard scan-code --dir . --file .env.prod")
+	fmt.Println("  envguard security")
+	fmt.Println("  envguard security --dir . --file .env.prod")
 	fmt.Println("  envguard generate-example")
 	fmt.Println("  envguard sync-example")
 }
@@ -116,6 +120,24 @@ func printScanCodeHelp() {
 	fmt.Println("  --file      Env file to compare against")
 }
 
+func printSecurityHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  envguard security")
+	fmt.Println("  envguard security --dir .")
+	fmt.Println("  envguard security --file .env.prod")
+	fmt.Println("  envguard security --dir . --file .env.prod")
+	fmt.Println("")
+	fmt.Println("Checks:")
+	fmt.Println("  - secret-looking values in the env file")
+	fmt.Println("  - secret-looking values in repository files")
+	fmt.Println("  - secret-looking values in git history")
+	fmt.Println("  - tracked env files in git")
+	fmt.Println("")
+	fmt.Println("Flags:")
+	fmt.Println("  --dir       Root directory to scan")
+	fmt.Println("  --file      Env file to inspect")
+}
+
 func hasHelpFlag(args []string) bool {
 	for _, arg := range args {
 		if arg == "--help" || arg == "-h" {
@@ -160,6 +182,9 @@ func handleHelpCommand(args []string) int {
 		return 0
 	case "scan-code":
 		printScanCodeHelp()
+		return 0
+	case "security":
+		printSecurityHelp()
 		return 0
 	default:
 		fmt.Printf("Error: unknown help topic: %s\n", args[0])
@@ -824,6 +849,7 @@ func runAnalyze(envPath string) int {
 func runDoctor(envPath string, examplePath string) int {
 	envExists := true
 	exampleExists := true
+	envTracked := security.IsGitTracked(".", envPath)
 	missingInEnv := []string{}
 
 	envFile, err := parser.ParseEnvFile(envPath)
@@ -880,21 +906,88 @@ func runDoctor(envPath string, examplePath string) int {
 		}
 	}
 
-	if len(missingInEnv) == 0 && envExists && exampleExists {
+	securityWarningCount := 0
+	if envTracked {
+		fmt.Printf("\n[WARNING] %s appears to be tracked by git\n", envPath)
+		securityWarningCount++
+	}
+
+	if len(missingInEnv) == 0 && envExists && exampleExists && securityWarningCount == 0 {
 		fmt.Println("[PASS] Environment doctor checks passed")
 		fmt.Println("")
-		fmt.Printf("Summary: %d target file issue(s), %d example file issue(s), %d missing key(s)\n", targetFileIssues, exampleFileIssues, len(missingInEnv))
+		fmt.Printf("Summary: %d target file issue(s), %d example file issue(s), %d missing key(s), %d security warning(s)\n", targetFileIssues, exampleFileIssues, len(missingInEnv), securityWarningCount)
 		return 0
 	}
 
 	fmt.Println("")
-	fmt.Printf("Summary: %d target file issue(s), %d example file issue(s), %d missing key(s)\n", targetFileIssues, exampleFileIssues, len(missingInEnv))
+	fmt.Printf("Summary: %d target file issue(s), %d example file issue(s), %d missing key(s), %d security warning(s)\n", targetFileIssues, exampleFileIssues, len(missingInEnv), securityWarningCount)
 
 	if len(missingInEnv) > 0 || !envExists {
 		return 1
 	}
 
 	return 0
+}
+
+func runSecurity(dirPath string, envPath string) int {
+	result, err := security.Run(dirPath, envPath)
+	if err != nil {
+		fmt.Printf("Error: could not run security checks: %v\n", err)
+		return 1
+	}
+
+	fmt.Println("Env Security Report")
+	fmt.Println("-------------------")
+	fmt.Printf("Root directory: %s\n", dirPath)
+	fmt.Printf("Env file: %s\n\n", envPath)
+
+	secretFindingCount := 0
+	warningCount := 0
+
+	if result.EnvFileTracked {
+		fmt.Printf("[WARNING] %s appears to be tracked by git\n", envPath)
+		warningCount++
+	}
+
+	for _, finding := range result.EnvFindings {
+		fmt.Printf("[ERROR] Env secret: %s (%s)\n", finding.Location, finding.Kind)
+		secretFindingCount++
+	}
+
+	for _, finding := range result.RepositoryFindings {
+		fmt.Printf("[ERROR] Repository secret: %s (%s)\n", finding.Location, finding.Kind)
+		secretFindingCount++
+	}
+
+	for _, finding := range result.HistoryFindings {
+		fmt.Printf("[ERROR] Git history secret: %s (%s)\n", finding.Location, finding.Kind)
+		secretFindingCount++
+	}
+
+	if !result.HistoryScanned {
+		fmt.Println("[WARNING] Git history scan skipped")
+		warningCount++
+	}
+
+	if secretFindingCount == 0 && warningCount == 0 {
+		fmt.Println("[PASS] Security checks found no issues")
+		fmt.Println("")
+		fmt.Printf("Summary: %d secret finding(s), %d warning(s)\n", secretFindingCount, warningCount)
+		return 0
+	}
+
+	if secretFindingCount == 0 {
+		fmt.Println("")
+		fmt.Println("[PASS] Security checks completed with warnings")
+		fmt.Println("")
+		fmt.Printf("Summary: %d secret finding(s), %d warning(s)\n", secretFindingCount, warningCount)
+		return 0
+	}
+
+	fmt.Println("")
+	fmt.Printf("Summary: %d secret finding(s), %d warning(s)\n", secretFindingCount, warningCount)
+
+	return 1
 }
 
 func runScanCode(dirPath string, envPath string) int {
@@ -1135,6 +1228,17 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(runScanCode(dirPath, envPath))
+	case "security":
+		if hasHelpFlag(args[1:]) {
+			printSecurityHelp()
+			os.Exit(0)
+		}
+		dirPath, envPath, err := getScanCodeOptions(args[1:])
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(runSecurity(dirPath, envPath))
 	case "generate-example":
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
