@@ -29,70 +29,17 @@ Env Guardian helps you catch environment configuration issues early:
 - VS Code command palette integration
 - green launch-ready CLI help and support links
 - colored pass, warning, and error output
-- one-command installer for Unix, Git Bash, and PowerShell
-- Homebrew formula support
+- curl-based one-command installer
 
 ---
 
 ## Installation
 
-Homebrew:
-
-```bash
-brew tap vulkanCommand/env-guardian https://github.com/vulkanCommand/env-guardian
-brew install envguard
-```
-
-One line:
-
-```bash
-brew tap vulkanCommand/env-guardian https://github.com/vulkanCommand/env-guardian && brew install envguard
-```
-
-Upgrade later:
-
-```bash
-brew upgrade envguard
-```
-
-```text
-+------------------------------------------------------------+
-| Env Guardian                                               |
-| One-command install from GitHub                            |
-+------------------------------------------------------------+
-| Unix / macOS / Git Bash                                    |
-|   curl -fsSL https://raw.githubusercontent.com/... | sh    |
-+------------------------------------------------------------+
-| Windows PowerShell                                         |
-|   irm https://raw.githubusercontent.com/... | iex          |
-+------------------------------------------------------------+
-```
-
-Unix, macOS, or Git Bash:
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.sh | sh
 ```
 
-Windows PowerShell:
-
-```powershell
-irm https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.ps1 | iex
-```
-
-Inside a cloned repo:
-
-```bash
-./scripts/install.sh
-```
-
-The installer shows an animated build step and a green completion state. Go is required.
-
-Manual build:
-
-```bash
-go build -o envguard ./cmd/envguard
-```
+The installer builds Env Guardian from GitHub, installs it into a user-local bin directory, and shows an animated build step. Go is required.
 
 Run after install:
 
@@ -353,8 +300,7 @@ v0.1.13 is complete.
 
 Completed in this version:
 - clearer `ENV GUARDIAN` title banner
-- Homebrew formula support
-- Homebrew install docs
+- curl-based one-command install docs
 
 ---
 
@@ -378,13 +324,12 @@ Completed in this version:
 - VS Code extension
 - Final UX polish
 - VS Code Marketplace packaging
-- Homebrew formula
 
 ### Next
 - Open-source launch
 
 ### Later
-- Homebrew, npm wrapper, and VS Code marketplace publishing
+- npm wrapper and VS Code marketplace publishing
 
 ---
 
