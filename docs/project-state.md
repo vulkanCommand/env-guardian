@@ -13,7 +13,7 @@ v0.1.13
 ## Current Status
 ## v0.1.13 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, launch-ready UX polish, green CLI status colors, animated installation, one-command installers, VS Code Marketplace packaging, and Homebrew formula support.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, launch-ready UX polish, green CLI status colors, animated installation, curl-based one-command install, launch README badges, and first public release notes.
 
 The CLI is stable for the completed backend roadmap blocks through Final UX polish.
 
@@ -202,7 +202,8 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - animated installer build step
 - VSIX packaging workflow
 - VS Code Marketplace metadata
-- Homebrew formula
+- launch README badges
+- first public release notes
 - public docs for architecture, commands, errors, output format, roadmap, and schema
 
 ---
@@ -323,8 +324,9 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - release artifact workflow
 - VSIX artifact workflow
 - VS Code Marketplace preparation
-- one-command install flow
-- Homebrew install flow
+- curl-based one-command install flow
+- launch README badges
+- first public release notes
 - open-source support files
 
 ---

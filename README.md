@@ -1,5 +1,10 @@
 # Env Guardian
 
+[![CI](https://github.com/vulkanCommand/env-guardian/actions/workflows/envguard.yml/badge.svg)](https://github.com/vulkanCommand/env-guardian/actions/workflows/envguard.yml)
+[![Release](https://img.shields.io/github/v/release/vulkanCommand/env-guardian?label=release)](https://github.com/vulkanCommand/env-guardian/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Go](https://img.shields.io/github/go-mod/go-version/vulkanCommand/env-guardian?label=go)](go.mod)
+
 Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environment variables before they break your application.
 
 ---
@@ -294,6 +299,19 @@ go test ./...
 
 ---
 
+## Open-Source Launch
+
+v0.1.13 is the first launch-ready version of Env Guardian.
+
+- install with one curl command
+- run locally, in CI, or before app startup
+- use JSON output for automation
+- report bugs and feature requests through GitHub Issues
+
+Release notes: `docs/release-v0.1.13.md`
+
+---
+
 ## Current Status
 
 v0.1.13 is complete.
@@ -301,6 +319,8 @@ v0.1.13 is complete.
 Completed in this version:
 - clearer `ENV GUARDIAN` title banner
 - curl-based one-command install docs
+- launch README badges
+- first public release notes
 
 ---
 

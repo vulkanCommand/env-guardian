@@ -3,8 +3,9 @@
 ## v0.1.13
 
 - Reworked the title banner so it clearly reads `ENV GUARDIAN`.
-- Added Homebrew formula support.
-- Added Homebrew installation docs.
+- Finalized curl-first installation docs for open-source launch.
+- Added README launch badges and first public release notes.
+- Improved VS Code extension guidance for users who have not installed the CLI yet.
 
 ## v0.1.12
 
