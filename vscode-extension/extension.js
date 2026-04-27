@@ -6,6 +6,7 @@ const vscode = require("vscode");
 const outputChannelName = "Env Guardian";
 const installCommand = "curl -fsSL https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.sh | sh";
 const githubIssuesUrl = "https://github.com/vulkanCommand/env-guardian/issues";
+const ansiPattern = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 
 function activate(context) {
 	const outputChannel = vscode.window.createOutputChannel(outputChannelName);
@@ -120,11 +121,11 @@ function runEnvGuard(label, args, outputChannel) {
 	});
 
 	child.stdout.on("data", (chunk) => {
-		outputChannel.append(chunk.toString());
+		outputChannel.append(stripAnsi(chunk.toString()));
 	});
 
 	child.stderr.on("data", (chunk) => {
-		outputChannel.append(chunk.toString());
+		outputChannel.append(stripAnsi(chunk.toString()));
 	});
 
 	child.on("error", (error) => {
@@ -142,8 +143,12 @@ function runEnvGuard(label, args, outputChannel) {
 			return;
 		}
 
-		vscode.window.showErrorMessage(`Env Guardian ${label} failed with exit code ${code}.`);
+		vscode.window.showWarningMessage(`Env Guardian ${label} completed with issues (exit code ${code}).`);
 	});
+}
+
+function stripAnsi(value) {
+	return value.replace(ansiPattern, "");
 }
 
 function showMissingCLIMessage(executablePath, error, outputChannel) {

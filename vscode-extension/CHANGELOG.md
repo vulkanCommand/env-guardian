@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.16
+
+- Stripped ANSI escape codes from VS Code Output panel text even when the CLI emits color.
+- Changed nonzero scan notifications from failed to completed with issues.
+
 ## v0.1.15
 
 - Disabled ANSI color output in the VS Code Output panel so status labels render cleanly.
