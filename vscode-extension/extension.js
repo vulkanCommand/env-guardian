@@ -4,12 +4,14 @@ const childProcess = require("child_process");
 const vscode = require("vscode");
 
 const outputChannelName = "Env Guardian";
+const installCommand = "curl -fsSL https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.sh | sh";
+const githubIssuesUrl = "https://github.com/vulkanCommand/env-guardian/issues";
 
 function activate(context) {
 	const outputChannel = vscode.window.createOutputChannel(outputChannelName);
 	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 
-	statusBarItem.text = "Env Guardian";
+	statusBarItem.text = "$(shield) Env Guardian";
 	statusBarItem.tooltip = "Run Env Guardian validation";
 	statusBarItem.command = "envGuardian.validate";
 	statusBarItem.show();
@@ -100,8 +102,11 @@ function runEnvGuard(label, args, outputChannel) {
 
 	const config = getConfig();
 	const commandLine = [config.executablePath].concat(args).join(" ");
+	let failedToStart = false;
 
 	outputChannel.clear();
+	outputChannel.appendLine("Env Guardian");
+	outputChannel.appendLine("------------");
 	outputChannel.appendLine(`$ ${commandLine}`);
 	outputChannel.appendLine("");
 	outputChannel.show(true);
@@ -120,19 +125,55 @@ function runEnvGuard(label, args, outputChannel) {
 	});
 
 	child.on("error", (error) => {
-		const message = `Could not run envguard: ${error.message}`;
-		outputChannel.appendLine("");
-		outputChannel.appendLine(message);
-		vscode.window.showErrorMessage(message);
+		failedToStart = true;
+		showMissingCLIMessage(config.executablePath, error, outputChannel);
 	});
 
 	child.on("close", (code) => {
+		if (failedToStart) {
+			return;
+		}
+
 		if (code === 0) {
 			vscode.window.showInformationMessage(`Env Guardian ${label} passed.`);
 			return;
 		}
 
 		vscode.window.showErrorMessage(`Env Guardian ${label} failed with exit code ${code}.`);
+	});
+}
+
+function showMissingCLIMessage(executablePath, error, outputChannel) {
+	outputChannel.appendLine("");
+	outputChannel.appendLine("Env Guardian CLI could not be started.");
+	outputChannel.appendLine(`Configured executable: ${executablePath}`);
+	outputChannel.appendLine(`Reason: ${error.message}`);
+	outputChannel.appendLine("");
+	outputChannel.appendLine("Install Env Guardian:");
+	outputChannel.appendLine(`  ${installCommand}`);
+	outputChannel.appendLine("");
+	outputChannel.appendLine("If Env Guardian is already installed, set envGuardian.executablePath to the full envguard binary path.");
+
+	vscode.window.showErrorMessage(
+		"Env Guardian CLI is not installed or VS Code cannot find it.",
+		"Copy Install Command",
+		"Open Settings",
+		"Open GitHub Issues",
+	).then((selection) => {
+		if (selection === "Copy Install Command") {
+			vscode.env.clipboard.writeText(installCommand);
+			vscode.window.showInformationMessage("Env Guardian install command copied.");
+			return;
+		}
+
+		if (selection === "Open Settings") {
+			vscode.commands.executeCommand("workbench.action.openSettings", "envGuardian.executablePath");
+			return;
+		}
+
+		if (selection === "Open GitHub Issues") {
+			vscode.env.openExternal(vscode.Uri.parse(githubIssuesUrl));
+		}
 	});
 }
 

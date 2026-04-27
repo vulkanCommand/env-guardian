@@ -1,6 +1,20 @@
 # Env Guardian VS Code Extension
 
-Run Env Guardian from the VS Code command palette.
+Run Env Guardian validation, CI, security, and log exposure checks from the VS Code command palette.
+
+Env Guardian for VS Code uses the `envguard` CLI installed on your machine.
+
+## Install the CLI
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.sh | sh
+```
+
+After installing, confirm VS Code can find the CLI:
+
+```bash
+envguard version
+```
 
 ## Commands
 
@@ -13,18 +27,31 @@ Run Env Guardian from the VS Code command palette.
 
 ## Settings
 
-- `envGuardian.executablePath` - path to the `envguard` executable
+- `envGuardian.executablePath` - path to the `envguard` executable, defaults to `envguard`
 - `envGuardian.envFile` - target env file
 - `envGuardian.exampleFile` - example env file
 - `envGuardian.rootDirectory` - root directory for scan commands
 - `envGuardian.useJson` - pass `--json` to supported commands
 
-## Local Use
+## If VS Code Cannot Find Env Guardian
 
-Build the CLI first:
+If VS Code shows that Env Guardian CLI is not installed, either install it with:
 
 ```bash
-go build -o envguard ./cmd/envguard
+curl -fsSL https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.sh | sh
 ```
 
-Then set `envGuardian.executablePath` to the built binary path if `envguard` is not available on `PATH`.
+Or set `envGuardian.executablePath` to the full binary path.
+
+Example:
+
+```json
+{
+  "envGuardian.executablePath": "C:/Users/gdkal/.local/bin/envguard"
+}
+```
+
+## Support
+
+- Issues: https://github.com/vulkanCommand/env-guardian/issues
+- Email: gdkalyan2109@gmail.com

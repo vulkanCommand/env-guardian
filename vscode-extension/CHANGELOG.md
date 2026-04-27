@@ -3,6 +3,8 @@
 ## v0.1.13
 
 - Synced extension metadata version with Env Guardian CLI.
+- Added friendly missing CLI guidance with install, settings, and support actions.
+- Improved Marketplace README with CLI install and troubleshooting steps.
 
 ## v0.1.11
 
