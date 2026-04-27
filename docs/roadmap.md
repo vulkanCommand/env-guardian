@@ -24,6 +24,7 @@ Env Guardian has completed the backend launch roadmap through final UX polish.
 - launch-ready CLI title card
 - colored CLI pass, warning, and error output
 - release packaging scripts
+- one-command installer
 - public docs pass
 - VS Code Marketplace packaging metadata and VSIX workflow
 

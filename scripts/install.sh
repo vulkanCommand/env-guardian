@@ -3,6 +3,8 @@ set -eu
 
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 BINARY_NAME="${BINARY_NAME:-envguard}"
+MODULE_PATH="${MODULE_PATH:-github.com/vulkanCommand/env-guardian/cmd/envguard@main}"
+LOG_FILE="${TMPDIR:-/tmp}/envguard-install.log"
 
 if [ -t 1 ]; then
   green="$(printf '\033[32m')"
@@ -22,7 +24,7 @@ run_step() {
 
   printf '%s' "$label "
 
-  "$@" >/tmp/envguard-install.log 2>&1 &
+  "$@" >"$LOG_FILE" 2>&1 &
   pid="$!"
   frames='|/-\'
   index=0
@@ -36,13 +38,13 @@ run_step() {
 
   if wait "$pid"; then
     printf '\r%s %s\n' "$label" "${green}done${reset}"
-    rm -f /tmp/envguard-install.log
+    rm -f "$LOG_FILE"
     return 0
   fi
 
   printf '\r%s %s\n' "$label" "${red}failed${reset}"
-  cat /tmp/envguard-install.log
-  rm -f /tmp/envguard-install.log
+  cat "$LOG_FILE"
+  rm -f "$LOG_FILE"
   return 1
 }
 
@@ -56,7 +58,11 @@ fi
 
 mkdir -p "$INSTALL_DIR"
 
-run_step "Building $BINARY_NAME" go build -o "$INSTALL_DIR/$BINARY_NAME" ./cmd/envguard
+if [ -f "go.mod" ] && [ -d "cmd/envguard" ]; then
+  run_step "Building $BINARY_NAME" go build -o "$INSTALL_DIR/$BINARY_NAME" ./cmd/envguard
+else
+  run_step "Installing $BINARY_NAME" env GOBIN="$INSTALL_DIR" go install "$MODULE_PATH"
+fi
 
 printf '%sInstalled:%s %s\n' "$green" "$reset" "$INSTALL_DIR/$BINARY_NAME"
 printf '%s\n' ''

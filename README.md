@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.11
+v0.1.12
 
 ---
 
@@ -29,6 +29,7 @@ Env Guardian helps you catch environment configuration issues early:
 - VS Code command palette integration
 - green launch-ready CLI help and support links
 - colored pass, warning, and error output
+- one-command installer for Unix, Git Bash, and PowerShell
 
 ---
 
@@ -37,27 +38,35 @@ Env Guardian helps you catch environment configuration issues early:
 ```text
 +------------------------------------------------------------+
 | Env Guardian                                               |
-| Production-grade env validation for modern teams           |
+| One-command install from GitHub                            |
 +------------------------------------------------------------+
-| Install from source                                        |
-|   git clone https://github.com/vulkanCommand/env-guardian  |
-|   cd env-guardian                                          |
-|   go build -o envguard ./cmd/envguard                      |
-|   ./envguard                                               |
+| Unix / macOS / Git Bash                                    |
+|   curl -fsSL https://raw.githubusercontent.com/... | sh    |
 +------------------------------------------------------------+
-| Support                                                    |
-|   Email:  gdkalyan2109@gmail.com                           |
-|   Issues: github.com/vulkanCommand/env-guardian/issues     |
+| Windows PowerShell                                         |
+|   irm https://raw.githubusercontent.com/... | iex          |
 +------------------------------------------------------------+
 ```
 
-Unix install helper:
+Unix, macOS, or Git Bash:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.sh | sh
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/vulkanCommand/env-guardian/main/scripts/install.ps1 | iex
+```
+
+Inside a cloned repo:
 
 ```bash
 ./scripts/install.sh
 ```
 
-The installer shows an animated build step and a green completion state.
+The installer shows an animated build step and a green completion state. Go is required.
 
 Manual build:
 
@@ -320,13 +329,12 @@ go test ./...
 
 ## Current Status
 
-v0.1.11 is complete.
+v0.1.12 is complete.
 
 Completed in this version:
-- green ASCII CLI title card and command table
-- colored pass, warning, and error status labels
-- animated installer build step
-- VS Code Marketplace packaging metadata and VSIX workflow
+- one-command Unix/Git Bash installer
+- one-command PowerShell installer
+- source checkout and remote install support
 
 ---
 

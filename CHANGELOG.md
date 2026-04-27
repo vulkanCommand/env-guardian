@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.12
+
+- Added remote one-command install support for Unix, macOS, and Git Bash.
+- Added one-command PowerShell installer.
+- Updated install docs for `curl | sh` and `irm | iex`.
+
 ## v0.1.11
 
 - Added green ASCII root title card and command table.

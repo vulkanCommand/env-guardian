@@ -2,7 +2,7 @@
   "name": "env-guardian",
   "displayName": "Env Guardian",
   "description": "Run Env Guardian validation, security, and log exposure checks from VS Code.",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "publisher": "vulkanCommand",
   "license": "MIT",
   "repository": {

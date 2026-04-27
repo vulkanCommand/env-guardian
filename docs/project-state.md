@@ -6,14 +6,14 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and d
 ---
 
 ## Current Version
-v0.1.11
+v0.1.12
 
 ---
 
 ## Current Status
-## v0.1.11 COMPLETE
+## v0.1.12 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, launch-ready UX polish, green CLI status colors, animated installation, and VS Code Marketplace packaging.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, launch-ready UX polish, green CLI status colors, animated installation, one-command installers, and VS Code Marketplace packaging.
 
 The CLI is stable for the completed backend roadmap blocks through Final UX polish.
 
@@ -194,6 +194,8 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - security policy
 - changelog
 - install script
+- PowerShell install script
+- one-command remote install support
 - release packaging script
 - tag-based release workflow
 - animated installer build step
@@ -319,6 +321,7 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - release artifact workflow
 - VSIX artifact workflow
 - VS Code Marketplace preparation
+- one-command install flow
 - open-source support files
 
 ---
@@ -348,7 +351,7 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.11
+- version: v0.1.12
 - CLI stable
 - ready for open-source launch
 
