@@ -2,7 +2,7 @@
   "name": "envguard-cli",
   "displayName": "Env Guardian",
   "description": "Validate, secure, and scan environment files from VS Code with Env Guardian CLI.",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "publisher": "vulkanCommand",
   "icon": "assets/icon.png",
   "license": "MIT",

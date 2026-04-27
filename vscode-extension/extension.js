@@ -113,6 +113,9 @@ function runEnvGuard(label, args, outputChannel) {
 
 	const child = childProcess.spawn(config.executablePath, args, {
 		cwd: workspaceFolder.uri.fsPath,
+		env: Object.assign({}, process.env, {
+			NO_COLOR: "1",
+		}),
 		windowsHide: true,
 	});
 

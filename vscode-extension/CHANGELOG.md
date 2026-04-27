@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.15
+
+- Disabled ANSI color output in the VS Code Output panel so status labels render cleanly.
+
 ## v0.1.14
 
 - Updated Marketplace package with the Env-Guardian logo.
