@@ -12,7 +12,7 @@ Running `envguard` with no arguments prints:
  |  ____| \ | \ \   / /   / ____| |  | |   /\   |  __ \|  __ \_   _|
  | |__  |  \| |\ \_/ /   | |  __| |  | |  /  \  | |__) | |  | || |
 ==========================================================================
-           ENV GUARDIAN CLI  (v0.1.12)
+           ENV GUARDIAN CLI  (v0.1.13)
            Validate. Secure. Encrypt. Ship environment files safely.
 ==========================================================================
 ```

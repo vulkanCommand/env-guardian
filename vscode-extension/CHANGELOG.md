@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.13
+
+- Synced extension metadata version with Env Guardian CLI.
+
 ## v0.1.11
 
 - Added marketplace metadata.

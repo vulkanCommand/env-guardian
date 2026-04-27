@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.13
+
+- Reworked the title banner so it clearly reads `ENV GUARDIAN`.
+- Added Homebrew formula support.
+- Added Homebrew installation docs.
+
 ## v0.1.12
 
 - Added remote one-command install support for Unix, macOS, and Git Bash.

@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.12
+v0.1.13
 
 ---
 
@@ -30,10 +30,30 @@ Env Guardian helps you catch environment configuration issues early:
 - green launch-ready CLI help and support links
 - colored pass, warning, and error output
 - one-command installer for Unix, Git Bash, and PowerShell
+- Homebrew formula support
 
 ---
 
 ## Installation
+
+Homebrew:
+
+```bash
+brew tap vulkanCommand/env-guardian https://github.com/vulkanCommand/env-guardian
+brew install envguard
+```
+
+One line:
+
+```bash
+brew tap vulkanCommand/env-guardian https://github.com/vulkanCommand/env-guardian && brew install envguard
+```
+
+Upgrade later:
+
+```bash
+brew upgrade envguard
+```
 
 ```text
 +------------------------------------------------------------+
@@ -329,12 +349,12 @@ go test ./...
 
 ## Current Status
 
-v0.1.12 is complete.
+v0.1.13 is complete.
 
 Completed in this version:
-- one-command Unix/Git Bash installer
-- one-command PowerShell installer
-- source checkout and remote install support
+- clearer `ENV GUARDIAN` title banner
+- Homebrew formula support
+- Homebrew install docs
 
 ---
 
@@ -358,6 +378,7 @@ Completed in this version:
 - VS Code extension
 - Final UX polish
 - VS Code Marketplace packaging
+- Homebrew formula
 
 ### Next
 - Open-source launch

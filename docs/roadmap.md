@@ -25,6 +25,7 @@ Env Guardian has completed the backend launch roadmap through final UX polish.
 - colored CLI pass, warning, and error output
 - release packaging scripts
 - one-command installer
+- Homebrew formula
 - public docs pass
 - VS Code Marketplace packaging metadata and VSIX workflow
 
@@ -39,7 +40,6 @@ Next action:
 
 ## Later
 
-- Homebrew formula
 - npm wrapper package
 - VS Code marketplace publishing
 - signed release checksums

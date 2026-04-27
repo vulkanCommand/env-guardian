@@ -6,14 +6,14 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and d
 ---
 
 ## Current Version
-v0.1.12
+v0.1.13
 
 ---
 
 ## Current Status
-## v0.1.12 COMPLETE
+## v0.1.13 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, launch-ready UX polish, green CLI status colors, animated installation, one-command installers, and VS Code Marketplace packaging.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, launch-ready UX polish, green CLI status colors, animated installation, one-command installers, VS Code Marketplace packaging, and Homebrew formula support.
 
 The CLI is stable for the completed backend roadmap blocks through Final UX polish.
 
@@ -178,6 +178,7 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - strict flag validation
 - consistent output formatting
 - green ASCII root title card
+- clear `ENV GUARDIAN` banner text
 - grouped command overview
 - quick-start examples
 - support email and GitHub Issues link
@@ -201,6 +202,7 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - animated installer build step
 - VSIX packaging workflow
 - VS Code Marketplace metadata
+- Homebrew formula
 - public docs for architecture, commands, errors, output format, roadmap, and schema
 
 ---
@@ -322,6 +324,7 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - VSIX artifact workflow
 - VS Code Marketplace preparation
 - one-command install flow
+- Homebrew install flow
 - open-source support files
 
 ---
@@ -351,7 +354,7 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.12
+- version: v0.1.13
 - CLI stable
 - ready for open-source launch
 

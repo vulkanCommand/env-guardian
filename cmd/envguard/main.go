@@ -122,12 +122,11 @@ func printHelp() {
 
 func printTitleCard() {
 	fmt.Println(green("=========================================================================="))
-	fmt.Println(green("  ______ _   ___     __    _____ _    _          _____  _____ _____          _   _ "))
-	fmt.Println(green(" |  ____| \\ | \\ \\   / /   / ____| |  | |   /\\   |  __ \\|  __ \\_   _|   /\\   | \\ | |"))
-	fmt.Println(green(" | |__  |  \\| |\\ \\_/ /   | |  __| |  | |  /  \\  | |__) | |  | || |    /  \\  |  \\| |"))
-	fmt.Println(green(" |  __| | . ` | \\   /    | | |_ | |  | | / /\\ \\ |  _  /| |  | || |   / /\\ \\ | . ` |"))
-	fmt.Println(green(" | |____| |\\  |  | |     | |__| | |__| |/ ____ \\| | \\ \\| |__| || |_ / ____ \\| |\\  |"))
-	fmt.Println(green(" |______|_| \\_|  |_|      \\_____|\\____//_/    \\_\\_|  \\_\\_____/_____/_/    \\_\\_| \\_|"))
+	fmt.Println(green("  EEEEE  N   N  V   V      GGGG  U   U   AAA   RRRR   DDDD   III   AAA   N   N"))
+	fmt.Println(green("  E      NN  N  V   V     G      U   U  A   A  R   R  D   D   I   A   A  NN  N"))
+	fmt.Println(green("  EEEE   N N N  V   V     G  GG  U   U  AAAAA  RRRR   D   D   I   AAAAA  N N N"))
+	fmt.Println(green("  E      N  NN   V V      G   G  U   U  A   A  R  R   D   D   I   A   A  N  NN"))
+	fmt.Println(green("  EEEEE  N   N    V        GGGG   UUU   A   A  R   R  DDDD   III  A   A  N   N"))
 	fmt.Println(green("=========================================================================="))
 	fmt.Println(green("           ENV GUARDIAN CLI") + "  " + bold("(v"+version.Version+")"))
 	fmt.Println(green("           Validate. Secure. Encrypt. Ship environment files safely."))
