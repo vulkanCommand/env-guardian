@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.14
+
+- Updated Marketplace package with the Env-Guardian logo.
+- Kept CLI integration behavior unchanged.
+
 ## v0.1.13
 
 - Synced extension metadata version with Env Guardian CLI.
