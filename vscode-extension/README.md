@@ -1,6 +1,6 @@
 # Env Guardian
 
-![Env Guardian icon](assets/icon.png)
+![Env Guardian logo](assets/logo.png)
 
 Validate, secure, and scan environment files without leaving VS Code.
 
