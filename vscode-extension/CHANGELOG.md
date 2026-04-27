@@ -5,6 +5,7 @@
 - Synced extension metadata version with Env Guardian CLI.
 - Added friendly missing CLI guidance with install, settings, and support actions.
 - Improved Marketplace README with CLI install and troubleshooting steps.
+- Renamed the Marketplace package id to `envguard-cli` to avoid the existing `env-guardian` Marketplace name.
 
 ## v0.1.11
 

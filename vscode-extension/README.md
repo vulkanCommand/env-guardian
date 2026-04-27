@@ -4,6 +4,12 @@ Run Env Guardian validation, CI, security, and log exposure checks from the VS C
 
 Env Guardian for VS Code uses the `envguard` CLI installed on your machine.
 
+Marketplace identifier:
+
+```text
+vulkanCommand.envguard-cli
+```
+
 ## Install the CLI
 
 ```bash

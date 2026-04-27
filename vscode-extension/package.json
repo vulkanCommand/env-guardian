@@ -1,5 +1,5 @@
 {
-  "name": "env-guardian",
+  "name": "envguard-cli",
   "displayName": "Env Guardian",
   "description": "Run Env Guardian validation, security, and log exposure checks from VS Code.",
   "version": "0.1.13",
