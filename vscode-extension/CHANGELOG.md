@@ -6,6 +6,7 @@
 - Added friendly missing CLI guidance with install, settings, and support actions.
 - Improved Marketplace README with CLI install and troubleshooting steps.
 - Renamed the Marketplace package id to `envguard-cli` to avoid the existing `env-guardian` Marketplace name.
+- Added a green Marketplace icon and polished listing content.
 
 ## v0.1.11
 

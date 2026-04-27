@@ -1,9 +1,10 @@
 {
   "name": "envguard-cli",
   "displayName": "Env Guardian",
-  "description": "Run Env Guardian validation, security, and log exposure checks from VS Code.",
+  "description": "Validate, secure, and scan environment files from VS Code with Env Guardian CLI.",
   "version": "0.1.13",
   "publisher": "vulkanCommand",
+  "icon": "assets/icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,14 +23,17 @@
   ],
   "keywords": [
     "env",
+    "environment-variables",
     "dotenv",
     "security",
     "validation",
     "secrets",
+    "secret-scanner",
+    "devops",
     "ci"
   ],
   "galleryBanner": {
-    "color": "#0f172a",
+    "color": "#065f46",
     "theme": "dark"
   },
   "scripts": {
