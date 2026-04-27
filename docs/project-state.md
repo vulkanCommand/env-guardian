@@ -6,14 +6,14 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, secure, encrypt, and d
 ---
 
 ## Current Version
-v0.1.10
+v0.1.11
 
 ---
 
 ## Current Status
-## v0.1.10 COMPLETE
+## v0.1.11 COMPLETE
 
-The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, and launch-ready UX polish.
+The project now includes core validation, multi-environment checks, workflow tooling, codebase env usage analysis, security scanning, log exposure protection, encryption, DevOps/runtime validation, JSON output, GitHub Actions automation, VS Code command palette integration, launch-ready UX polish, green CLI status colors, animated installation, and VS Code Marketplace packaging.
 
 The CLI is stable for the completed backend roadmap blocks through Final UX polish.
 
@@ -177,10 +177,14 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - command-specific help
 - strict flag validation
 - consistent output formatting
-- polished root title card
+- green ASCII root title card
 - grouped command overview
 - quick-start examples
 - support email and GitHub Issues link
+- green pass labels
+- red error labels
+- yellow warning labels
+- `NO_COLOR` support
 
 ---
 
@@ -192,6 +196,9 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - install script
 - release packaging script
 - tag-based release workflow
+- animated installer build step
+- VSIX packaging workflow
+- VS Code Marketplace metadata
 - public docs for architecture, commands, errors, output format, roadmap, and schema
 
 ---
@@ -306,9 +313,12 @@ The CLI is stable for the completed backend roadmap blocks through Final UX poli
 - GitHub Action workflow
 - VS Code extension
 - final CLI title card
+- colored status output
 - public launch docs
 - install and release scripts
 - release artifact workflow
+- VSIX artifact workflow
+- VS Code Marketplace preparation
 - open-source support files
 
 ---
@@ -338,7 +348,7 @@ No jumping ahead.
 
 ## Git Status
 - branch: main
-- version: v0.1.10
+- version: v0.1.11
 - CLI stable
 - ready for open-source launch
 

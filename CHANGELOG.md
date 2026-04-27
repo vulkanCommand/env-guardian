@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.11
+
+- Added green ASCII root title card and command table.
+- Added colored pass, warning, and error labels for human-readable CLI output.
+- Added animated installer build step.
+- Added VS Code Marketplace package metadata.
+- Added VSIX packaging workflow.
+- Added VS Code Marketplace publishing documentation.
+
 ## v0.1.10
 
 - Added launch-ready CLI title card and command overview.

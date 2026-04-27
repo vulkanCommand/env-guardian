@@ -21,50 +21,123 @@ import (
 	"github.com/vulkanCommand/env-guardian/internal/version"
 )
 
+const (
+	ansiReset  = "\033[0m"
+	ansiBold   = "\033[1m"
+	ansiGreen  = "\033[32m"
+	ansiRed    = "\033[31m"
+	ansiYellow = "\033[33m"
+	ansiCyan   = "\033[36m"
+)
+
+func colorEnabled() bool {
+	return os.Getenv("NO_COLOR") == "" && os.Getenv("TERM") != "dumb"
+}
+
+func colorText(value string, color string) string {
+	if !colorEnabled() {
+		return value
+	}
+	return color + value + ansiReset
+}
+
+func green(value string) string {
+	return colorText(value, ansiGreen)
+}
+
+func red(value string) string {
+	return colorText(value, ansiRed)
+}
+
+func yellow(value string) string {
+	return colorText(value, ansiYellow)
+}
+
+func cyan(value string) string {
+	return colorText(value, ansiCyan)
+}
+
+func bold(value string) string {
+	return colorText(value, ansiBold)
+}
+
+func statusLine(value string) string {
+	replacer := strings.NewReplacer(
+		"[PASS]", green("[PASS]"),
+		"[ERROR]", red("[ERROR]"),
+		"[WARN]", yellow("[WARN]"),
+		"[WARNING]", yellow("[WARNING]"),
+		"[OK]", green("[OK]"),
+		"[RUN]", cyan("[RUN]"),
+		"[SKIP]", yellow("[SKIP]"),
+		"Error:", red("Error:"),
+	)
+
+	return replacer.Replace(value)
+}
+
+func printStatusLine(value string) {
+	fmt.Println(statusLine(value))
+}
+
+func printfStatusLine(format string, args ...any) {
+	fmt.Printf(statusLine(format), args...)
+}
+
 func printHelp() {
 	printTitleCard()
 	fmt.Println("")
-	fmt.Println("COMMANDS")
-	fmt.Println("  validate          Validate .env against .env.example")
-	fmt.Println("  lint              Check env file syntax")
-	fmt.Println("  analyze           Inspect empty values and sensitive-looking keys")
-	fmt.Println("  doctor            Diagnose missing files, keys, and tracked env files")
-	fmt.Println("  scan-code         Compare env usage in code against an env file")
-	fmt.Println("  security          Scan env files, repository files, and git history")
-	fmt.Println("  log-scan          Detect accidental env value logging")
-	fmt.Println("  encrypt           Encrypt an env file with ENVGUARD_KEY")
-	fmt.Println("  decrypt           Decrypt an Env Guardian encrypted file")
-	fmt.Println("  docker            Validate Dockerfile env references")
-	fmt.Println("  ci                Run fail-fast validation for CI")
-	fmt.Println("  run               Validate env config before starting a command")
-	fmt.Println("  generate-example  Create .env.example from an env file")
-	fmt.Println("  sync-example      Append missing keys to .env.example")
-	fmt.Println("  version           Print the Env Guardian version")
+	fmt.Println(green("COMMANDS"))
+	fmt.Println(green("+-------------------+--------------------------------------------------+"))
+	fmt.Println(green("| Command           | Description                                      |"))
+	fmt.Println(green("+-------------------+--------------------------------------------------+"))
+	fmt.Println(green("| validate          | Validate .env against .env.example               |"))
+	fmt.Println(green("| lint              | Check env file syntax                            |"))
+	fmt.Println(green("| analyze           | Inspect empty values and sensitive-looking keys  |"))
+	fmt.Println(green("| doctor            | Diagnose files, keys, and tracked env files      |"))
+	fmt.Println(green("| scan-code         | Compare env usage in code against an env file    |"))
+	fmt.Println(green("| security          | Scan env, repository files, and git history      |"))
+	fmt.Println(green("| log-scan          | Detect accidental env value logging              |"))
+	fmt.Println(green("| encrypt           | Encrypt an env file with ENVGUARD_KEY            |"))
+	fmt.Println(green("| decrypt           | Decrypt an Env Guardian encrypted file           |"))
+	fmt.Println(green("| docker            | Validate Dockerfile env references               |"))
+	fmt.Println(green("| ci                | Run fail-fast validation for CI                  |"))
+	fmt.Println(green("| run               | Validate env config before starting a command    |"))
+	fmt.Println(green("| generate-example  | Create .env.example from an env file             |"))
+	fmt.Println(green("| sync-example      | Append missing keys to .env.example              |"))
+	fmt.Println(green("| version           | Print the Env Guardian version                   |"))
+	fmt.Println(green("+-------------------+--------------------------------------------------+"))
 	fmt.Println("")
-	fmt.Println("QUICK START")
-	fmt.Println("  envguard validate")
-	fmt.Println("  envguard security")
-	fmt.Println("  envguard ci --json")
+	fmt.Println(green("QUICK START"))
+	fmt.Println(cyan("  envguard validate"))
+	fmt.Println(cyan("  envguard security"))
+	fmt.Println(cyan("  envguard ci --json"))
 	fmt.Println("")
-	fmt.Println("HELP")
-	fmt.Println("  envguard help <command>")
-	fmt.Println("  envguard help validate")
+	fmt.Println(green("HELP"))
+	fmt.Println(cyan("  envguard help <command>"))
+	fmt.Println(cyan("  envguard help validate"))
 	fmt.Println("")
 	printSupport()
 }
 
 func printTitleCard() {
-	fmt.Println("+------------------------------------------------------------+")
-	fmt.Println("| Env Guardian                                               |")
-	fmt.Printf("| Version %-50s |\n", version.Version)
-	fmt.Println("| Validate, secure, encrypt, and ship env files safely.      |")
-	fmt.Println("+------------------------------------------------------------+")
+	fmt.Println(green("=========================================================================="))
+	fmt.Println(green("  ______ _   ___     __    _____ _    _          _____  _____ _____          _   _ "))
+	fmt.Println(green(" |  ____| \\ | \\ \\   / /   / ____| |  | |   /\\   |  __ \\|  __ \\_   _|   /\\   | \\ | |"))
+	fmt.Println(green(" | |__  |  \\| |\\ \\_/ /   | |  __| |  | |  /  \\  | |__) | |  | || |    /  \\  |  \\| |"))
+	fmt.Println(green(" |  __| | . ` | \\   /    | | |_ | |  | | / /\\ \\ |  _  /| |  | || |   / /\\ \\ | . ` |"))
+	fmt.Println(green(" | |____| |\\  |  | |     | |__| | |__| |/ ____ \\| | \\ \\| |__| || |_ / ____ \\| |\\  |"))
+	fmt.Println(green(" |______|_| \\_|  |_|      \\_____|\\____//_/    \\_\\_|  \\_\\_____/_____/_/    \\_\\_| \\_|"))
+	fmt.Println(green("=========================================================================="))
+	fmt.Println(green("           ENV GUARDIAN CLI") + "  " + bold("(v"+version.Version+")"))
+	fmt.Println(green("           Validate. Secure. Encrypt. Ship environment files safely."))
+	fmt.Println(green("=========================================================================="))
 }
 
 func printSupport() {
-	fmt.Println("SUPPORT")
-	fmt.Println("  Email:  gdkalyan2109@gmail.com")
-	fmt.Println("  Issues: https://github.com/vulkanCommand/env-guardian/issues")
+	fmt.Println(green("SUPPORT"))
+	fmt.Println(cyan("  Email:  gdkalyan2109@gmail.com"))
+	fmt.Println(cyan("  Issues: https://github.com/vulkanCommand/env-guardian/issues"))
 }
 
 func printValidateHelp() {
@@ -328,7 +401,7 @@ func handleHelpCommand(args []string) int {
 	}
 
 	if len(args) > 1 {
-		fmt.Printf("Error: unexpected argument: %s\n", args[1])
+		printfStatusLine("Error: unexpected argument: %s\n", args[1])
 		return 1
 	}
 
@@ -376,7 +449,7 @@ func handleHelpCommand(args []string) int {
 		printSyncExampleHelp()
 		return 0
 	default:
-		fmt.Printf("Error: unknown help topic: %s\n", args[0])
+		printfStatusLine("Error: unknown help topic: %s\n", args[0])
 		return 1
 	}
 }
@@ -1348,7 +1421,7 @@ func runValidate(envPath string, examplePath string) int {
 	loadedSchema, err := parser.LoadTypeSchema("examples/.env.types")
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Printf("Error: could not read type schema file: %v\n", err)
+			printfStatusLine("Error: could not read type schema file: %v\n", err)
 			return 1
 		}
 	} else {
@@ -1357,13 +1430,13 @@ func runValidate(envPath string, examplePath string) int {
 
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", envPath)
+		printfStatusLine("Error: could not read %s\n", envPath)
 		return 1
 	}
 
 	exampleFile, err := parser.ParseEnvFile(examplePath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", examplePath)
+		printfStatusLine("Error: could not read %s\n", examplePath)
 		return 1
 	}
 
@@ -1383,27 +1456,27 @@ func runValidate(envPath string, examplePath string) int {
 	warningCount := 0
 
 	for _, key := range result.MissingKeys {
-		fmt.Printf("[ERROR] Missing key: %s\n", key)
+		printfStatusLine("[ERROR] Missing key: %s\n", key)
 		errorCount++
 	}
 
 	for _, key := range result.DuplicateKeys {
-		fmt.Printf("[ERROR] Duplicate key: %s\n", key)
+		printfStatusLine("[ERROR] Duplicate key: %s\n", key)
 		errorCount++
 	}
 
 	for _, issue := range result.InvalidTypeValues {
-		fmt.Printf("[ERROR] Invalid type: %s\n", issue)
+		printfStatusLine("[ERROR] Invalid type: %s\n", issue)
 		errorCount++
 	}
 
 	for _, key := range result.UnusedKeys {
-		fmt.Printf("[WARN] Unused key: %s\n", key)
+		printfStatusLine("[WARN] Unused key: %s\n", key)
 		warningCount++
 	}
 
 	if errorCount == 0 && warningCount == 0 {
-		fmt.Println("[PASS] Environment configuration looks good")
+		printStatusLine("[PASS] Environment configuration looks good")
 		fmt.Println("")
 		fmt.Printf("Summary: %d error(s), %d warning(s)\n", errorCount, warningCount)
 		return 0
@@ -1411,7 +1484,7 @@ func runValidate(envPath string, examplePath string) int {
 
 	if errorCount == 0 && warningCount > 0 {
 		fmt.Println("")
-		fmt.Println("[PASS] Environment configuration is valid with warnings")
+		printStatusLine("[PASS] Environment configuration is valid with warnings")
 		fmt.Println("")
 		fmt.Printf("Summary: %d error(s), %d warning(s)\n", errorCount, warningCount)
 		return 0
@@ -1448,9 +1521,9 @@ func runValidateAll() int {
 
 		if _, err := os.Stat(target.envPath); err != nil {
 			if os.IsNotExist(err) {
-				fmt.Printf("[SKIP] %s missing\n", target.envPath)
+				printfStatusLine("[SKIP] %s missing\n", target.envPath)
 			} else {
-				fmt.Printf("[ERROR] could not access %s\n", target.envPath)
+				printfStatusLine("[ERROR] could not access %s\n", target.envPath)
 				finalExitCode = 1
 			}
 
@@ -1462,9 +1535,9 @@ func runValidateAll() int {
 
 		if _, err := os.Stat(target.examplePath); err != nil {
 			if os.IsNotExist(err) {
-				fmt.Printf("[SKIP] %s missing\n", target.examplePath)
+				printfStatusLine("[SKIP] %s missing\n", target.examplePath)
 			} else {
-				fmt.Printf("[ERROR] could not access %s\n", target.examplePath)
+				printfStatusLine("[ERROR] could not access %s\n", target.examplePath)
 				finalExitCode = 1
 			}
 
@@ -1508,7 +1581,7 @@ func runValidateAll() int {
 		printedConsistencyIssue := false
 
 		if len(inconsistencies) == 0 {
-			fmt.Println("[PASS] All environments are consistent")
+			printStatusLine("[PASS] All environments are consistent")
 		} else {
 			for env, missingKeys := range inconsistencies {
 				filtered := []string{}
@@ -1528,13 +1601,13 @@ func runValidateAll() int {
 
 				fmt.Printf("[%s]\n", env)
 				for _, key := range filtered {
-					fmt.Printf("[WARNING] Missing key across environments: %s\n", key)
+					printfStatusLine("[WARNING] Missing key across environments: %s\n", key)
 				}
 				fmt.Println("")
 			}
 
 			if !printedConsistencyIssue {
-				fmt.Println("[PASS] No additional cross-environment inconsistencies found")
+				printStatusLine("[PASS] No additional cross-environment inconsistencies found")
 			}
 		}
 	}
@@ -1545,7 +1618,7 @@ func runValidateAll() int {
 func runLint(envPath string) int {
 	result, err := linter.Run(envPath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", envPath)
+		printfStatusLine("Error: could not read %s\n", envPath)
 		return 1
 	}
 
@@ -1554,14 +1627,14 @@ func runLint(envPath string) int {
 	fmt.Printf("Target file: %s\n\n", envPath)
 
 	if len(result.InvalidLines) == 0 {
-		fmt.Println("[PASS] Env syntax looks good")
+		printStatusLine("[PASS] Env syntax looks good")
 		fmt.Println("")
 		fmt.Printf("Summary: %d lint issue(s) found\n", len(result.InvalidLines))
 		return 0
 	}
 
 	for _, issue := range result.InvalidLines {
-		fmt.Printf("[ERROR] %s\n", issue)
+		printfStatusLine("[ERROR] %s\n", issue)
 	}
 
 	fmt.Println("")
@@ -1573,7 +1646,7 @@ func runLint(envPath string) int {
 func runAnalyze(envPath string) int {
 	result, err := analyzer.Run(envPath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", envPath)
+		printfStatusLine("Error: could not read %s\n", envPath)
 		return 1
 	}
 
@@ -1603,7 +1676,7 @@ func runAnalyze(envPath string) int {
 	fmt.Printf("Summary: %d empty value(s), %d potential sensitive key(s)\n", len(result.EmptyValues), len(result.PotentialSecrets))
 
 	if len(result.EmptyValues) == 0 && len(result.PotentialSecrets) == 0 {
-		fmt.Println("[PASS] Environment analysis found no issues")
+		printStatusLine("[PASS] Environment analysis found no issues")
 	}
 
 	return 0
@@ -1651,19 +1724,19 @@ func runDoctor(envPath string, examplePath string) int {
 	fmt.Printf("Example file: %s\n\n", examplePath)
 
 	if envExists {
-		fmt.Printf("[OK] %s file exists\n", envPath)
+		printfStatusLine("[OK] %s file exists\n", envPath)
 	} else {
-		fmt.Printf("[ERROR] %s file missing\n", envPath)
+		printfStatusLine("[ERROR] %s file missing\n", envPath)
 	}
 
 	if exampleExists {
-		fmt.Printf("[OK] %s file exists\n", examplePath)
+		printfStatusLine("[OK] %s file exists\n", examplePath)
 	} else {
-		fmt.Printf("[WARNING] %s file missing\n", examplePath)
+		printfStatusLine("[WARNING] %s file missing\n", examplePath)
 	}
 
 	if len(missingInEnv) > 0 {
-		fmt.Printf("\n[WARNING] Missing keys in %s (present in %s):\n", envPath, examplePath)
+		printfStatusLine("\n[WARNING] Missing keys in %s (present in %s):\n", envPath, examplePath)
 		for _, key := range missingInEnv {
 			fmt.Printf("- %s\n", key)
 		}
@@ -1671,12 +1744,12 @@ func runDoctor(envPath string, examplePath string) int {
 
 	securityWarningCount := 0
 	if envTracked {
-		fmt.Printf("\n[WARNING] %s appears to be tracked by git\n", envPath)
+		printfStatusLine("\n[WARNING] %s appears to be tracked by git\n", envPath)
 		securityWarningCount++
 	}
 
 	if len(missingInEnv) == 0 && envExists && exampleExists && securityWarningCount == 0 {
-		fmt.Println("[PASS] Environment doctor checks passed")
+		printStatusLine("[PASS] Environment doctor checks passed")
 		fmt.Println("")
 		fmt.Printf("Summary: %d target file issue(s), %d example file issue(s), %d missing key(s), %d security warning(s)\n", targetFileIssues, exampleFileIssues, len(missingInEnv), securityWarningCount)
 		return 0
@@ -1695,7 +1768,7 @@ func runDoctor(envPath string, examplePath string) int {
 func runSecurity(dirPath string, envPath string) int {
 	result, err := security.Run(dirPath, envPath)
 	if err != nil {
-		fmt.Printf("Error: could not run security checks: %v\n", err)
+		printfStatusLine("Error: could not run security checks: %v\n", err)
 		return 1
 	}
 
@@ -1708,32 +1781,32 @@ func runSecurity(dirPath string, envPath string) int {
 	warningCount := 0
 
 	if result.EnvFileTracked {
-		fmt.Printf("[WARNING] %s appears to be tracked by git\n", envPath)
+		printfStatusLine("[WARNING] %s appears to be tracked by git\n", envPath)
 		warningCount++
 	}
 
 	for _, finding := range result.EnvFindings {
-		fmt.Printf("[ERROR] Env secret: %s (%s)\n", finding.Location, finding.Kind)
+		printfStatusLine("[ERROR] Env secret: %s (%s)\n", finding.Location, finding.Kind)
 		secretFindingCount++
 	}
 
 	for _, finding := range result.RepositoryFindings {
-		fmt.Printf("[ERROR] Repository secret: %s (%s)\n", finding.Location, finding.Kind)
+		printfStatusLine("[ERROR] Repository secret: %s (%s)\n", finding.Location, finding.Kind)
 		secretFindingCount++
 	}
 
 	for _, finding := range result.HistoryFindings {
-		fmt.Printf("[ERROR] Git history secret: %s (%s)\n", finding.Location, finding.Kind)
+		printfStatusLine("[ERROR] Git history secret: %s (%s)\n", finding.Location, finding.Kind)
 		secretFindingCount++
 	}
 
 	if !result.HistoryScanned {
-		fmt.Println("[WARNING] Git history scan skipped")
+		printStatusLine("[WARNING] Git history scan skipped")
 		warningCount++
 	}
 
 	if secretFindingCount == 0 && warningCount == 0 {
-		fmt.Println("[PASS] Security checks found no issues")
+		printStatusLine("[PASS] Security checks found no issues")
 		fmt.Println("")
 		fmt.Printf("Summary: %d secret finding(s), %d warning(s)\n", secretFindingCount, warningCount)
 		return 0
@@ -1741,7 +1814,7 @@ func runSecurity(dirPath string, envPath string) int {
 
 	if secretFindingCount == 0 {
 		fmt.Println("")
-		fmt.Println("[PASS] Security checks completed with warnings")
+		printStatusLine("[PASS] Security checks completed with warnings")
 		fmt.Println("")
 		fmt.Printf("Summary: %d secret finding(s), %d warning(s)\n", secretFindingCount, warningCount)
 		return 0
@@ -1756,7 +1829,7 @@ func runSecurity(dirPath string, envPath string) int {
 func runLogScan(dirPath string) int {
 	result, err := logscan.Run(dirPath)
 	if err != nil {
-		fmt.Printf("Error: could not scan logs in %s\n", dirPath)
+		printfStatusLine("Error: could not scan logs in %s\n", dirPath)
 		return 1
 	}
 
@@ -1773,14 +1846,14 @@ func runLogScan(dirPath string) int {
 	fmt.Printf("Scanned files: %d\n\n", result.ScannedFilesCount)
 
 	if len(result.Findings) == 0 {
-		fmt.Println("[PASS] Log exposure scan found no issues")
+		printStatusLine("[PASS] Log exposure scan found no issues")
 		fmt.Println("")
 		fmt.Printf("Summary: %d log exposure finding(s)\n", len(result.Findings))
 		return 0
 	}
 
 	for _, finding := range result.Findings {
-		fmt.Printf("[ERROR] Log exposure: %s (%s)\n", finding.Location, finding.Kind)
+		printfStatusLine("[ERROR] Log exposure: %s (%s)\n", finding.Location, finding.Kind)
 	}
 
 	fmt.Println("")
@@ -2212,7 +2285,7 @@ func runScanCodeJSON(dirPath string, envPath string) int {
 func runEncrypt(inputPath string, outputPath string) int {
 	err := encryption.EncryptFile(inputPath, outputPath, os.Getenv("ENVGUARD_KEY"))
 	if err != nil {
-		fmt.Printf("Error: could not encrypt %s: %v\n", inputPath, err)
+		printfStatusLine("Error: could not encrypt %s: %v\n", inputPath, err)
 		return 1
 	}
 
@@ -2220,7 +2293,7 @@ func runEncrypt(inputPath string, outputPath string) int {
 	fmt.Println("---------------------")
 	fmt.Printf("Input file: %s\n", inputPath)
 	fmt.Printf("Output file: %s\n\n", outputPath)
-	fmt.Println("[PASS] Env file encrypted")
+	printStatusLine("[PASS] Env file encrypted")
 
 	return 0
 }
@@ -2228,7 +2301,7 @@ func runEncrypt(inputPath string, outputPath string) int {
 func runDecrypt(inputPath string, outputPath string) int {
 	err := encryption.DecryptFile(inputPath, outputPath, os.Getenv("ENVGUARD_KEY"))
 	if err != nil {
-		fmt.Printf("Error: could not decrypt %s: %v\n", inputPath, err)
+		printfStatusLine("Error: could not decrypt %s: %v\n", inputPath, err)
 		return 1
 	}
 
@@ -2236,7 +2309,7 @@ func runDecrypt(inputPath string, outputPath string) int {
 	fmt.Println("---------------------")
 	fmt.Printf("Input file: %s\n", inputPath)
 	fmt.Printf("Output file: %s\n\n", outputPath)
-	fmt.Println("[PASS] Env file decrypted")
+	printStatusLine("[PASS] Env file decrypted")
 
 	return 0
 }
@@ -2244,13 +2317,13 @@ func runDecrypt(inputPath string, outputPath string) int {
 func runDocker(dockerfilePath string, envPath string) int {
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", envPath)
+		printfStatusLine("Error: could not read %s\n", envPath)
 		return 1
 	}
 
 	result, err := runtimecheck.ValidateDockerfile(dockerfilePath, envFile.Values)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", dockerfilePath)
+		printfStatusLine("Error: could not read %s\n", dockerfilePath)
 		return 1
 	}
 
@@ -2261,14 +2334,14 @@ func runDocker(dockerfilePath string, envPath string) int {
 	fmt.Printf("Referenced keys: %d\n\n", len(result.ReferencedKeys))
 
 	if len(result.MissingKeys) == 0 {
-		fmt.Println("[PASS] Docker environment references are satisfied")
+		printStatusLine("[PASS] Docker environment references are satisfied")
 		fmt.Println("")
 		fmt.Printf("Summary: %d missing Docker key(s)\n", len(result.MissingKeys))
 		return 0
 	}
 
 	for _, key := range result.MissingKeys {
-		fmt.Printf("[ERROR] Missing Docker env key: %s\n", key)
+		printfStatusLine("[ERROR] Missing Docker env key: %s\n", key)
 	}
 
 	fmt.Println("")
@@ -2287,12 +2360,12 @@ func runCI(envPath string, examplePath string) int {
 
 	lintResult, err := linter.Run(envPath)
 	if err != nil {
-		fmt.Printf("[ERROR] could not lint %s\n", envPath)
+		printfStatusLine("[ERROR] could not lint %s\n", envPath)
 		return 1
 	}
 
 	for _, issue := range lintResult.InvalidLines {
-		fmt.Printf("[ERROR] Lint: %s\n", issue)
+		printfStatusLine("[ERROR] Lint: %s\n", issue)
 		errorCount++
 	}
 
@@ -2300,7 +2373,7 @@ func runCI(envPath string, examplePath string) int {
 	loadedSchema, err := parser.LoadTypeSchema("examples/.env.types")
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Printf("[ERROR] could not read type schema file: %v\n", err)
+			printfStatusLine("[ERROR] could not read type schema file: %v\n", err)
 			errorCount++
 		}
 	} else {
@@ -2309,13 +2382,13 @@ func runCI(envPath string, examplePath string) int {
 
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
-		fmt.Printf("[ERROR] could not read %s\n", envPath)
+		printfStatusLine("[ERROR] could not read %s\n", envPath)
 		return 1
 	}
 
 	exampleFile, err := parser.ParseEnvFile(examplePath)
 	if err != nil {
-		fmt.Printf("[ERROR] could not read %s\n", examplePath)
+		printfStatusLine("[ERROR] could not read %s\n", examplePath)
 		return 1
 	}
 
@@ -2326,22 +2399,22 @@ func runCI(envPath string, examplePath string) int {
 	sort.Strings(result.InvalidTypeValues)
 
 	for _, key := range result.MissingKeys {
-		fmt.Printf("[ERROR] Missing key: %s\n", key)
+		printfStatusLine("[ERROR] Missing key: %s\n", key)
 		errorCount++
 	}
 
 	for _, key := range result.DuplicateKeys {
-		fmt.Printf("[ERROR] Duplicate key: %s\n", key)
+		printfStatusLine("[ERROR] Duplicate key: %s\n", key)
 		errorCount++
 	}
 
 	for _, issue := range result.InvalidTypeValues {
-		fmt.Printf("[ERROR] Invalid type: %s\n", issue)
+		printfStatusLine("[ERROR] Invalid type: %s\n", issue)
 		errorCount++
 	}
 
 	if errorCount == 0 {
-		fmt.Println("[PASS] CI environment validation passed")
+		printStatusLine("[PASS] CI environment validation passed")
 		fmt.Println("")
 		fmt.Printf("Summary: %d CI error(s)\n", errorCount)
 		return 0
@@ -2357,12 +2430,12 @@ func runPreStart(envPath string, examplePath string, commandArgs []string) int {
 	validationExitCode := runValidate(envPath, examplePath)
 	if validationExitCode != 0 {
 		fmt.Println("")
-		fmt.Println("[ERROR] Pre-start validation failed")
+		printStatusLine("[ERROR] Pre-start validation failed")
 		return validationExitCode
 	}
 
 	fmt.Println("")
-	fmt.Printf("[RUN] %s\n", strings.Join(commandArgs, " "))
+	printfStatusLine("[RUN] %s\n", strings.Join(commandArgs, " "))
 
 	command := exec.Command(commandArgs[0], commandArgs[1:]...)
 	command.Stdin = os.Stdin
@@ -2374,7 +2447,7 @@ func runPreStart(envPath string, examplePath string, commandArgs []string) int {
 			return exitError.ExitCode()
 		}
 
-		fmt.Printf("Error: could not run command: %v\n", err)
+		printfStatusLine("Error: could not run command: %v\n", err)
 		return 1
 	}
 
@@ -2384,13 +2457,13 @@ func runPreStart(envPath string, examplePath string, commandArgs []string) int {
 func runScanCode(dirPath string, envPath string) int {
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", envPath)
+		printfStatusLine("Error: could not read %s\n", envPath)
 		return 1
 	}
 
 	result, err := codebase.Run(dirPath, envFile.Values)
 	if err != nil {
-		fmt.Printf("Error: could not scan codebase in %s\n", dirPath)
+		printfStatusLine("Error: could not scan codebase in %s\n", dirPath)
 		return 1
 	}
 
@@ -2404,26 +2477,26 @@ func runScanCode(dirPath string, envPath string) int {
 	if len(result.NamingMismatches) > 0 {
 		fmt.Println("\nLikely naming mismatches:")
 		for _, mismatch := range result.NamingMismatches {
-			fmt.Printf("[WARN] Code uses %s but env file contains %s\n", mismatch.CodeKey, mismatch.EnvKey)
+			printfStatusLine("[WARN] Code uses %s but env file contains %s\n", mismatch.CodeKey, mismatch.EnvKey)
 		}
 	}
 
 	if len(result.MissingInEnv) > 0 {
 		fmt.Println("\nUsed in code but missing in env file:")
 		for _, key := range result.MissingInEnv {
-			fmt.Printf("[ERROR] Missing env key for code usage: %s\n", key)
+			printfStatusLine("[ERROR] Missing env key for code usage: %s\n", key)
 		}
 	}
 
 	if len(result.UnusedInEnv) > 0 {
 		fmt.Println("\nPresent in env file but unused in code:")
 		for _, key := range result.UnusedInEnv {
-			fmt.Printf("[WARN] Unused env key in codebase: %s\n", key)
+			printfStatusLine("[WARN] Unused env key in codebase: %s\n", key)
 		}
 	}
 
 	if len(result.NamingMismatches) == 0 && len(result.MissingInEnv) == 0 && len(result.UnusedInEnv) == 0 {
-		fmt.Println("\n[PASS] Codebase analysis found no issues")
+		printStatusLine("\n[PASS] Codebase analysis found no issues")
 	}
 
 	fmt.Println("")
@@ -2444,7 +2517,7 @@ func runScanCode(dirPath string, envPath string) int {
 func runGenerateExample(envPath string) int {
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", envPath)
+		printfStatusLine("Error: could not read %s\n", envPath)
 		return 1
 	}
 
@@ -2452,7 +2525,7 @@ func runGenerateExample(envPath string) int {
 
 	file, err := os.Create(outputPath)
 	if err != nil {
-		fmt.Printf("Error: could not create %s\n", outputPath)
+		printfStatusLine("Error: could not create %s\n", outputPath)
 		return 1
 	}
 	defer file.Close()
@@ -2467,7 +2540,7 @@ func runGenerateExample(envPath string) int {
 	for _, key := range keys {
 		_, err := file.WriteString(fmt.Sprintf("%s=\n", key))
 		if err != nil {
-			fmt.Println("Error: failed to write to file")
+			printStatusLine("Error: failed to write to file")
 			return 1
 		}
 	}
@@ -2484,7 +2557,7 @@ func runGenerateExample(envPath string) int {
 func runSyncExample(envPath string) int {
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
-		fmt.Printf("Error: could not read %s\n", envPath)
+		printfStatusLine("Error: could not read %s\n", envPath)
 		return 1
 	}
 
@@ -2501,7 +2574,7 @@ func runSyncExample(envPath string) int {
 
 	file, err := os.OpenFile(examplePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Printf("Error: could not open %s\n", examplePath)
+		printfStatusLine("Error: could not open %s\n", examplePath)
 		return 1
 	}
 	defer file.Close()
@@ -2519,7 +2592,7 @@ func runSyncExample(envPath string) int {
 	for _, key := range newKeys {
 		_, err := file.WriteString(fmt.Sprintf("%s=\n", key))
 		if err != nil {
-			fmt.Println("Error: failed to write to file")
+			printStatusLine("Error: failed to write to file")
 			return 1
 		}
 	}
@@ -2530,7 +2603,7 @@ func runSyncExample(envPath string) int {
 	fmt.Printf("Synced file: %s\n\n", examplePath)
 
 	if len(newKeys) == 0 {
-		fmt.Println("[PASS] .env.example already up to date")
+		printStatusLine("[PASS] .env.example already up to date")
 	} else {
 		fmt.Printf("Added %d new key(s):\n", len(newKeys))
 		for _, key := range newKeys {
@@ -2559,17 +2632,17 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if hasAllFlag(commandArgs) {
 			envPath, examplePath, err := getValidatePaths(commandArgs)
 			if err != nil {
-				fmt.Printf("Error: %s\n", err)
+				printfStatusLine("Error: %s\n", err)
 				os.Exit(1)
 			}
 			if envPath != ".env" || examplePath != ".env.example" {
-				fmt.Println("Error: --all cannot be used with --file or --example")
+				printStatusLine("Error: --all cannot be used with --file or --example")
 				os.Exit(1)
 			}
 			if jsonOutput {
@@ -2579,7 +2652,7 @@ func main() {
 		}
 		envPath, examplePath, err := getValidatePaths(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2593,12 +2666,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		envPath, err := getLintFilePath(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2612,12 +2685,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		envPath, err := getAnalyzeFilePath(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2631,12 +2704,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		envPath, examplePath, err := getDoctorPaths(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2650,12 +2723,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		dirPath, envPath, err := getScanCodeOptions(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2669,12 +2742,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		dirPath, envPath, err := getScanCodeOptions(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2688,12 +2761,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		dirPath, err := getLogScanDir(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2707,7 +2780,7 @@ func main() {
 		}
 		inputPath, outputPath, err := getCryptoPaths(args[1:], ".env", ".env.enc")
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		os.Exit(runEncrypt(inputPath, outputPath))
@@ -2718,7 +2791,7 @@ func main() {
 		}
 		inputPath, outputPath, err := getCryptoPaths(args[1:], ".env.enc", ".env.decrypted")
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		os.Exit(runDecrypt(inputPath, outputPath))
@@ -2729,12 +2802,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		dockerfilePath, envPath, err := getDockerOptions(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2748,12 +2821,12 @@ func main() {
 		}
 		commandArgs, jsonOutput, err := extractJSONFlag(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		envPath, examplePath, err := getValidatePaths(commandArgs)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		if jsonOutput {
@@ -2767,7 +2840,7 @@ func main() {
 		}
 		envPath, examplePath, commandArgs, err := getRunOptions(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		os.Exit(runPreStart(envPath, examplePath, commandArgs))
@@ -2778,7 +2851,7 @@ func main() {
 		}
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		os.Exit(runGenerateExample(envPath))
@@ -2789,7 +2862,7 @@ func main() {
 		}
 		envPath, err := getLintFilePath(args[1:])
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			printfStatusLine("Error: %s\n", err)
 			os.Exit(1)
 		}
 		os.Exit(runSyncExample(envPath))

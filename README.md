@@ -6,7 +6,7 @@ Env Guardian is a Go CLI tool to validate, lint, analyze, and diagnose environme
 
 ## Current Version
 
-v0.1.10
+v0.1.11
 
 ---
 
@@ -27,7 +27,8 @@ Env Guardian helps you catch environment configuration issues early:
 - Docker and runtime environment checks
 - JSON output for automation and CI
 - VS Code command palette integration
-- polished launch-ready CLI help and support links
+- green launch-ready CLI help and support links
+- colored pass, warning, and error output
 
 ---
 
@@ -56,6 +57,8 @@ Unix install helper:
 ./scripts/install.sh
 ```
 
+The installer shows an animated build step and a green completion state.
+
 Manual build:
 
 ```bash
@@ -75,7 +78,7 @@ envguard ci --json
 
 ## Commands
 
-When opened without arguments, Env Guardian shows a title card, a command overview, quick-start examples, and support links.
+When opened without arguments, Env Guardian shows a green ASCII title card, a command table, quick-start examples, and support links.
 
 ### Validate
 
@@ -253,6 +256,8 @@ VS Code:
 - `vscode-extension/` contains a lightweight extension that runs the existing `envguard` executable from the command palette.
 - commands include Validate, Validate All Environments, CI Check, Security Scan, Log Exposure Scan, and Show Version.
 - settings allow configuring executable path, target env file, example env file, root directory, and JSON output.
+- marketplace packaging metadata is included in `vscode-extension/package.json`.
+- package a `.vsix` with `cd vscode-extension && npm run package`.
 
 ---
 
@@ -315,12 +320,13 @@ go test ./...
 
 ## Current Status
 
-v0.1.10 is complete.
+v0.1.11 is complete.
 
 Completed in this version:
-- launch-ready CLI title card and command overview
-- installation and support documentation
-- release packaging scripts, release workflow, and final public docs
+- green ASCII CLI title card and command table
+- colored pass, warning, and error status labels
+- animated installer build step
+- VS Code Marketplace packaging metadata and VSIX workflow
 
 ---
 
@@ -343,6 +349,7 @@ Completed in this version:
 - GitHub Action
 - VS Code extension
 - Final UX polish
+- VS Code Marketplace packaging
 
 ### Next
 - Open-source launch

@@ -2,14 +2,40 @@
   "name": "env-guardian",
   "displayName": "Env Guardian",
   "description": "Run Env Guardian validation, security, and log exposure checks from VS Code.",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "publisher": "vulkanCommand",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vulkanCommand/env-guardian.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vulkanCommand/env-guardian/issues",
+    "email": "gdkalyan2109@gmail.com"
+  },
+  "homepage": "https://github.com/vulkanCommand/env-guardian#readme",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "env",
+    "dotenv",
+    "security",
+    "validation",
+    "secrets",
+    "ci"
+  ],
+  "galleryBanner": {
+    "color": "#0f172a",
+    "theme": "dark"
+  },
+  "scripts": {
+    "package": "npx @vscode/vsce package",
+    "publish": "npx @vscode/vsce publish"
+  },
   "activationEvents": [
     "onCommand:envGuardian.validate",
     "onCommand:envGuardian.validateAll",

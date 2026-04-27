@@ -17,6 +17,7 @@ Env Guardian keeps CLI routing in `cmd/envguard` and domain logic in focused int
 - `internal/doctor` - diagnostics
 - `internal/version` - version constant
 - `vscode-extension` - VS Code command palette wrapper around the CLI
+- `.github/workflows/vscode-extension.yml` - VSIX packaging workflow
 
 ## Design Rules
 
@@ -32,3 +33,4 @@ Env Guardian keeps CLI routing in `cmd/envguard` and domain logic in focused int
 - release archives from `scripts/deploy.sh`
 - GitHub Actions workflow from `.github/workflows/envguard.yml`
 - VS Code extension scaffold from `vscode-extension/`
+- VSIX artifact workflow for tagged releases

@@ -7,14 +7,26 @@ Env Guardian defaults to human-readable terminal output.
 Running `envguard` with no arguments prints:
 
 ```text
-+------------------------------------------------------------+
-| Env Guardian                                               |
-| Version 0.1.10                                             |
-| Validate, secure, encrypt, and ship env files safely.      |
-+------------------------------------------------------------+
+==========================================================================
+  ______ _   ___     __    _____ _    _          _____  _____ _____
+ |  ____| \ | \ \   / /   / ____| |  | |   /\   |  __ \|  __ \_   _|
+ | |__  |  \| |\ \_/ /   | |  __| |  | |  /  \  | |__) | |  | || |
+==========================================================================
+           ENV GUARDIAN CLI  (v0.1.11)
+           Validate. Secure. Encrypt. Ship environment files safely.
+==========================================================================
 ```
 
 The command overview appears below the card with quick-start examples and support links.
+
+When color is enabled:
+
+- `[PASS]` is green
+- `[ERROR]` and `Error:` are red
+- `[WARN]`, `[WARNING]`, and `[SKIP]` are yellow
+- `[RUN]` is cyan
+
+Set `NO_COLOR=1` to disable ANSI color.
 
 ## Report Output
 
